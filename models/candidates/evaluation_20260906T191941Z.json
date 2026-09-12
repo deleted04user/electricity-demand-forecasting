@@ -1,0 +1,827 @@
+{
+  "outcome": "improved_model_deployed",
+  "candidate_path": "models\\candidates\\electricity_xgb_candidate_20260906T191941Z.pkl",
+  "backup_path": "models\\archive\\electricity_xgb_prediction_model_pre_20260906T191941Z.pkl",
+  "selected_candidate": "enhanced_conservative",
+  "feature_list": [
+    "hour",
+    "dayofweek",
+    "month",
+    "year",
+    "dayofyear",
+    "quarter",
+    "weekofyear",
+    "hour_sin",
+    "hour_cos",
+    "dayofweek_sin",
+    "dayofweek_cos",
+    "is_weekend",
+    "is_holiday",
+    "Temperature",
+    "Humidity",
+    "temperature_squared",
+    "demand_lag_1h",
+    "demand_lag_2h",
+    "demand_lag_3h",
+    "demand_lag_6h",
+    "demand_lag_12h",
+    "demand_lag_24h",
+    "demand_lag_48h",
+    "demand_lag_72h",
+    "demand_lag_168h",
+    "demand_lag_336h",
+    "demand_rolling_mean_6h",
+    "demand_rolling_std_6h",
+    "demand_rolling_mean_24h",
+    "demand_rolling_std_24h",
+    "demand_rolling_mean_168h",
+    "demand_rolling_std_168h"
+  ],
+  "model_params": {
+    "n_estimators": 1328,
+    "learning_rate": 0.02,
+    "max_depth": 5,
+    "min_child_weight": 5,
+    "subsample": 0.85,
+    "colsample_bytree": 0.85,
+    "reg_alpha": 0.1,
+    "reg_lambda": 3.0
+  },
+  "periods": {
+    "training": {
+      "start": "2020-01-01 00:00:00",
+      "end": "2023-12-31 23:00:00"
+    },
+    "tuning": {
+      "start": "2023-01-01 00:00:00",
+      "end": "2023-12-31 23:00:00"
+    },
+    "held_out_test": {
+      "start": "2024-01-01 00:00:00",
+      "end": "2024-12-31 23:00:00"
+    }
+  },
+  "metrics": {
+    "24-hour naive": {
+      "mae": 178.25228479113778,
+      "rmse": 224.52530162308227,
+      "r2": 0.7859570414986135,
+      "wape": 6.092945647256818,
+      "bias": -0.9947103623355646
+    },
+    "168-hour naive": {
+      "mae": 144.33319986152782,
+      "rmse": 181.9918861806726,
+      "r2": 0.8593711516013328,
+      "wape": 4.933537558193848,
+      "bias": -1.1512797138241404
+    },
+    "old XGBoost": {
+      "mae": 112.95289213953957,
+      "rmse": 141.3221704323494,
+      "r2": 0.9152009541498376,
+      "wape": 3.8609088983800373,
+      "bias": -59.98698361637794
+    },
+    "new XGBoost": {
+      "mae": 103.72373756421017,
+      "rmse": 130.2185613398242,
+      "r2": 0.9280027092876204,
+      "wape": 3.5454417655828188,
+      "bias": -28.58374304540103
+    }
+  },
+  "validation_results": [
+    {
+      "name": "current_config_and_features",
+      "features": [
+        "hour",
+        "dayofweek",
+        "month",
+        "year",
+        "dayofyear",
+        "quarter",
+        "weekofyear",
+        "Temperature",
+        "Humidity",
+        "is_holiday",
+        "is_weekend",
+        "Demand_lag_24hr",
+        "demand_lag_168hr",
+        "demand_rolling_mean_24hr",
+        "demand_rolling_std_24hr"
+      ],
+      "params": {
+        "n_estimators": 1000,
+        "learning_rate": 0.01,
+        "max_depth": 6,
+        "min_child_weight": 1,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "reg_alpha": 0.0,
+        "reg_lambda": 1.0
+      },
+      "average_validation_metrics": {
+        "mae": 102.81473323840463,
+        "rmse": 128.7402557716136,
+        "r2": 0.9297771349869816,
+        "wape": 3.571233686554064,
+        "bias": -18.55753747393091
+      },
+      "fold_metrics": [
+        {
+          "mae": 103.91966704534785,
+          "rmse": 130.02276189579297,
+          "r2": 0.92650675037844,
+          "wape": 3.5852188723235088,
+          "bias": -29.367003881050614
+        },
+        {
+          "mae": 102.05048923366672,
+          "rmse": 127.60999119109718,
+          "r2": 0.9331735489632844,
+          "wape": 3.5508859972311875,
+          "bias": -19.168116948054386
+        },
+        {
+          "mae": 102.47404343619928,
+          "rmse": 128.58801422795062,
+          "r2": 0.9296511056192204,
+          "wape": 3.5775961901074957,
+          "bias": -7.137491592687739
+        }
+      ],
+      "average_naive_metrics": {
+        "24-hour naive": {
+          "mae": 177.44949778295452,
+          "rmse": 223.7976347448235,
+          "r2": 0.7879037327707222,
+          "wape": 6.16412940495087,
+          "bias": -0.287953221048228
+        },
+        "168-hour naive": {
+          "mae": 145.0539680201067,
+          "rmse": 181.2246290621663,
+          "r2": 0.8608828560669579,
+          "wape": 5.038449382120579,
+          "bias": -1.0841181483949176
+        }
+      }
+    },
+    {
+      "name": "enhanced_current_config",
+      "features": [
+        "hour",
+        "dayofweek",
+        "month",
+        "year",
+        "dayofyear",
+        "quarter",
+        "weekofyear",
+        "hour_sin",
+        "hour_cos",
+        "dayofweek_sin",
+        "dayofweek_cos",
+        "is_weekend",
+        "is_holiday",
+        "Temperature",
+        "Humidity",
+        "temperature_squared",
+        "demand_lag_1h",
+        "demand_lag_2h",
+        "demand_lag_3h",
+        "demand_lag_6h",
+        "demand_lag_12h",
+        "demand_lag_24h",
+        "demand_lag_48h",
+        "demand_lag_72h",
+        "demand_lag_168h",
+        "demand_lag_336h",
+        "demand_rolling_mean_6h",
+        "demand_rolling_std_6h",
+        "demand_rolling_mean_24h",
+        "demand_rolling_std_24h",
+        "demand_rolling_mean_168h",
+        "demand_rolling_std_168h"
+      ],
+      "params": {
+        "n_estimators": 1000,
+        "learning_rate": 0.01,
+        "max_depth": 6,
+        "min_child_weight": 1,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "reg_alpha": 0.0,
+        "reg_lambda": 1.0
+      },
+      "average_validation_metrics": {
+        "mae": 103.67154395019884,
+        "rmse": 129.2305062936601,
+        "r2": 0.9292270208895118,
+        "wape": 3.6009999118468667,
+        "bias": -13.874760360810962
+      },
+      "fold_metrics": [
+        {
+          "mae": 104.89429232185071,
+          "rmse": 130.65173028969377,
+          "r2": 0.9257940023321415,
+          "wape": 3.618843353945806,
+          "bias": -19.613708586707983
+        },
+        {
+          "mae": 102.38398272336185,
+          "rmse": 127.36854428218842,
+          "r2": 0.933426190242876,
+          "wape": 3.5624900313874046,
+          "bias": -11.508017163957867
+        },
+        {
+          "mae": 103.73635680538392,
+          "rmse": 129.6712443090982,
+          "r2": 0.9284608700935179,
+          "wape": 3.621666350207389,
+          "bias": -10.50255533176704
+        }
+      ],
+      "average_naive_metrics": {
+        "24-hour naive": {
+          "mae": 177.44949778295452,
+          "rmse": 223.7976347448235,
+          "r2": 0.7879037327707222,
+          "wape": 6.16412940495087,
+          "bias": -0.287953221048228
+        },
+        "168-hour naive": {
+          "mae": 145.0539680201067,
+          "rmse": 181.2246290621663,
+          "r2": 0.8608828560669579,
+          "wape": 5.038449382120579,
+          "bias": -1.0841181483949176
+        }
+      }
+    },
+    {
+      "name": "enhanced_depth4",
+      "features": [
+        "hour",
+        "dayofweek",
+        "month",
+        "year",
+        "dayofyear",
+        "quarter",
+        "weekofyear",
+        "hour_sin",
+        "hour_cos",
+        "dayofweek_sin",
+        "dayofweek_cos",
+        "is_weekend",
+        "is_holiday",
+        "Temperature",
+        "Humidity",
+        "temperature_squared",
+        "demand_lag_1h",
+        "demand_lag_2h",
+        "demand_lag_3h",
+        "demand_lag_6h",
+        "demand_lag_12h",
+        "demand_lag_24h",
+        "demand_lag_48h",
+        "demand_lag_72h",
+        "demand_lag_168h",
+        "demand_lag_336h",
+        "demand_rolling_mean_6h",
+        "demand_rolling_std_6h",
+        "demand_rolling_mean_24h",
+        "demand_rolling_std_24h",
+        "demand_rolling_mean_168h",
+        "demand_rolling_std_168h"
+      ],
+      "params": {
+        "n_estimators": 1200,
+        "learning_rate": 0.03,
+        "max_depth": 4,
+        "min_child_weight": 3,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "reg_alpha": 0.0,
+        "reg_lambda": 2.0
+      },
+      "average_validation_metrics": {
+        "mae": 102.67833357984132,
+        "rmse": 127.92987545833323,
+        "r2": 0.9306267886617136,
+        "wape": 3.566442446560013,
+        "bias": -12.615228302068035
+      },
+      "fold_metrics": [
+        {
+          "mae": 104.4203733755026,
+          "rmse": 130.10364931436567,
+          "r2": 0.9264152813424638,
+          "wape": 3.602493194262775,
+          "bias": -23.293619170311953
+        },
+        {
+          "mae": 101.03391190581269,
+          "rmse": 125.6613649344694,
+          "r2": 0.9351988690319636,
+          "wape": 3.515513798374656,
+          "bias": -8.59950215601659
+        },
+        {
+          "mae": 102.58071545820869,
+          "rmse": 128.02461212616456,
+          "r2": 0.9302662156107131,
+          "wape": 3.5813203470426087,
+          "bias": -5.952563579875564
+        }
+      ],
+      "average_naive_metrics": {
+        "24-hour naive": {
+          "mae": 177.44949778295452,
+          "rmse": 223.7976347448235,
+          "r2": 0.7879037327707222,
+          "wape": 6.16412940495087,
+          "bias": -0.287953221048228
+        },
+        "168-hour naive": {
+          "mae": 145.0539680201067,
+          "rmse": 181.2246290621663,
+          "r2": 0.8608828560669579,
+          "wape": 5.038449382120579,
+          "bias": -1.0841181483949176
+        }
+      }
+    },
+    {
+      "name": "enhanced_depth5",
+      "features": [
+        "hour",
+        "dayofweek",
+        "month",
+        "year",
+        "dayofyear",
+        "quarter",
+        "weekofyear",
+        "hour_sin",
+        "hour_cos",
+        "dayofweek_sin",
+        "dayofweek_cos",
+        "is_weekend",
+        "is_holiday",
+        "Temperature",
+        "Humidity",
+        "temperature_squared",
+        "demand_lag_1h",
+        "demand_lag_2h",
+        "demand_lag_3h",
+        "demand_lag_6h",
+        "demand_lag_12h",
+        "demand_lag_24h",
+        "demand_lag_48h",
+        "demand_lag_72h",
+        "demand_lag_168h",
+        "demand_lag_336h",
+        "demand_rolling_mean_6h",
+        "demand_rolling_std_6h",
+        "demand_rolling_mean_24h",
+        "demand_rolling_std_24h",
+        "demand_rolling_mean_168h",
+        "demand_rolling_std_168h"
+      ],
+      "params": {
+        "n_estimators": 1200,
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 3,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "reg_alpha": 0.05,
+        "reg_lambda": 2.0
+      },
+      "average_validation_metrics": {
+        "mae": 102.36925112862451,
+        "rmse": 127.73494767275496,
+        "r2": 0.9308366772574391,
+        "wape": 3.555674236800227,
+        "bias": -12.916780717887372
+      },
+      "fold_metrics": [
+        {
+          "mae": 104.37226765821072,
+          "rmse": 130.08203715313974,
+          "r2": 0.9264397263557037,
+          "wape": 3.600833551479025,
+          "bias": -21.744452148092307
+        },
+        {
+          "mae": 100.62479874998658,
+          "rmse": 125.53358676772558,
+          "r2": 0.9353305874785451,
+          "wape": 3.501278548870073,
+          "bias": -10.940410751510452
+        },
+        {
+          "mae": 102.11068697767624,
+          "rmse": 127.58921909739952,
+          "r2": 0.9307397179380686,
+          "wape": 3.5649106100515837,
+          "bias": -6.065479254059357
+        }
+      ],
+      "average_naive_metrics": {
+        "24-hour naive": {
+          "mae": 177.44949778295452,
+          "rmse": 223.7976347448235,
+          "r2": 0.7879037327707222,
+          "wape": 6.16412940495087,
+          "bias": -0.287953221048228
+        },
+        "168-hour naive": {
+          "mae": 145.0539680201067,
+          "rmse": 181.2246290621663,
+          "r2": 0.8608828560669579,
+          "wape": 5.038449382120579,
+          "bias": -1.0841181483949176
+        }
+      }
+    },
+    {
+      "name": "enhanced_depth6",
+      "features": [
+        "hour",
+        "dayofweek",
+        "month",
+        "year",
+        "dayofyear",
+        "quarter",
+        "weekofyear",
+        "hour_sin",
+        "hour_cos",
+        "dayofweek_sin",
+        "dayofweek_cos",
+        "is_weekend",
+        "is_holiday",
+        "Temperature",
+        "Humidity",
+        "temperature_squared",
+        "demand_lag_1h",
+        "demand_lag_2h",
+        "demand_lag_3h",
+        "demand_lag_6h",
+        "demand_lag_12h",
+        "demand_lag_24h",
+        "demand_lag_48h",
+        "demand_lag_72h",
+        "demand_lag_168h",
+        "demand_lag_336h",
+        "demand_rolling_mean_6h",
+        "demand_rolling_std_6h",
+        "demand_rolling_mean_24h",
+        "demand_rolling_std_24h",
+        "demand_rolling_mean_168h",
+        "demand_rolling_std_168h"
+      ],
+      "params": {
+        "n_estimators": 1400,
+        "learning_rate": 0.02,
+        "max_depth": 6,
+        "min_child_weight": 3,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "reg_alpha": 0.05,
+        "reg_lambda": 2.0
+      },
+      "average_validation_metrics": {
+        "mae": 102.61703870020114,
+        "rmse": 128.08292952927388,
+        "r2": 0.9304552764669163,
+        "wape": 3.5642519431257305,
+        "bias": -12.429442037588572
+      },
+      "fold_metrics": [
+        {
+          "mae": 104.79969042727112,
+          "rmse": 130.81738810913234,
+          "r2": 0.9256057063643828,
+          "wape": 3.615579597359132,
+          "bias": -22.627557288905095
+        },
+        {
+          "mae": 100.99362350463868,
+          "rmse": 126.00055405413144,
+          "r2": 0.9348485703874377,
+          "wape": 3.514111947970469,
+          "bias": -9.546822109012812
+        },
+        {
+          "mae": 102.05780216869364,
+          "rmse": 127.43084642455788,
+          "r2": 0.9309115526489282,
+          "wape": 3.5630642840475892,
+          "bias": -5.113946714847815
+        }
+      ],
+      "average_naive_metrics": {
+        "24-hour naive": {
+          "mae": 177.44949778295452,
+          "rmse": 223.7976347448235,
+          "r2": 0.7879037327707222,
+          "wape": 6.16412940495087,
+          "bias": -0.287953221048228
+        },
+        "168-hour naive": {
+          "mae": 145.0539680201067,
+          "rmse": 181.2246290621663,
+          "r2": 0.8608828560669579,
+          "wape": 5.038449382120579,
+          "bias": -1.0841181483949176
+        }
+      }
+    },
+    {
+      "name": "enhanced_conservative",
+      "features": [
+        "hour",
+        "dayofweek",
+        "month",
+        "year",
+        "dayofyear",
+        "quarter",
+        "weekofyear",
+        "hour_sin",
+        "hour_cos",
+        "dayofweek_sin",
+        "dayofweek_cos",
+        "is_weekend",
+        "is_holiday",
+        "Temperature",
+        "Humidity",
+        "temperature_squared",
+        "demand_lag_1h",
+        "demand_lag_2h",
+        "demand_lag_3h",
+        "demand_lag_6h",
+        "demand_lag_12h",
+        "demand_lag_24h",
+        "demand_lag_48h",
+        "demand_lag_72h",
+        "demand_lag_168h",
+        "demand_lag_336h",
+        "demand_rolling_mean_6h",
+        "demand_rolling_std_6h",
+        "demand_rolling_mean_24h",
+        "demand_rolling_std_24h",
+        "demand_rolling_mean_168h",
+        "demand_rolling_std_168h"
+      ],
+      "params": {
+        "n_estimators": 1400,
+        "learning_rate": 0.02,
+        "max_depth": 5,
+        "min_child_weight": 5,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "reg_alpha": 0.1,
+        "reg_lambda": 3.0
+      },
+      "average_validation_metrics": {
+        "mae": 102.36701041384474,
+        "rmse": 127.82468631455068,
+        "r2": 0.9307336668650334,
+        "wape": 3.555593920339541,
+        "bias": -12.676129184567566
+      },
+      "fold_metrics": [
+        {
+          "mae": 104.3800934569277,
+          "rmse": 130.37396201346513,
+          "r2": 0.9261091938901405,
+          "wape": 3.6011035408087526,
+          "bias": -22.552615049004178
+        },
+        {
+          "mae": 100.65079925872467,
+          "rmse": 125.4769574089088,
+          "r2": 0.9353889202552493,
+          "wape": 3.502183246565226,
+          "bias": -9.344350512158739
+        },
+        {
+          "mae": 102.0701385258818,
+          "rmse": 127.62313952127815,
+          "r2": 0.9307028864497106,
+          "wape": 3.5634949736446444,
+          "bias": -6.1314219925397815
+        }
+      ],
+      "average_naive_metrics": {
+        "24-hour naive": {
+          "mae": 177.44949778295452,
+          "rmse": 223.7976347448235,
+          "r2": 0.7879037327707222,
+          "wape": 6.16412940495087,
+          "bias": -0.287953221048228
+        },
+        "168-hour naive": {
+          "mae": 145.0539680201067,
+          "rmse": 181.2246290621663,
+          "r2": 0.8608828560669579,
+          "wape": 5.038449382120579,
+          "bias": -1.0841181483949176
+        }
+      }
+    },
+    {
+      "name": "enhanced_shallow",
+      "features": [
+        "hour",
+        "dayofweek",
+        "month",
+        "year",
+        "dayofyear",
+        "quarter",
+        "weekofyear",
+        "hour_sin",
+        "hour_cos",
+        "dayofweek_sin",
+        "dayofweek_cos",
+        "is_weekend",
+        "is_holiday",
+        "Temperature",
+        "Humidity",
+        "temperature_squared",
+        "demand_lag_1h",
+        "demand_lag_2h",
+        "demand_lag_3h",
+        "demand_lag_6h",
+        "demand_lag_12h",
+        "demand_lag_24h",
+        "demand_lag_48h",
+        "demand_lag_72h",
+        "demand_lag_168h",
+        "demand_lag_336h",
+        "demand_rolling_mean_6h",
+        "demand_rolling_std_6h",
+        "demand_rolling_mean_24h",
+        "demand_rolling_std_24h",
+        "demand_rolling_mean_168h",
+        "demand_rolling_std_168h"
+      ],
+      "params": {
+        "n_estimators": 1200,
+        "learning_rate": 0.04,
+        "max_depth": 3,
+        "min_child_weight": 3,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "reg_alpha": 0.05,
+        "reg_lambda": 2.0
+      },
+      "average_validation_metrics": {
+        "mae": 102.87839438062036,
+        "rmse": 128.095126826553,
+        "r2": 0.9304496567763435,
+        "wape": 3.573425896403039,
+        "bias": -10.859001739471779
+      },
+      "fold_metrics": [
+        {
+          "mae": 104.33558020205075,
+          "rmse": 129.8817843640216,
+          "r2": 0.9266660344894255,
+          "wape": 3.599567837645041,
+          "bias": -22.81426544998509
+        },
+        {
+          "mae": 101.36181953514017,
+          "rmse": 125.6895806593435,
+          "r2": 0.9351697651597027,
+          "wape": 3.5269234703723873,
+          "bias": -4.706799655117831
+        },
+        {
+          "mae": 102.93778340467017,
+          "rmse": 128.71401545629394,
+          "r2": 0.9295131706799025,
+          "wape": 3.5937863811916895,
+          "bias": -5.055940113312414
+        }
+      ],
+      "average_naive_metrics": {
+        "24-hour naive": {
+          "mae": 177.44949778295452,
+          "rmse": 223.7976347448235,
+          "r2": 0.7879037327707222,
+          "wape": 6.16412940495087,
+          "bias": -0.287953221048228
+        },
+        "168-hour naive": {
+          "mae": 145.0539680201067,
+          "rmse": 181.2246290621663,
+          "r2": 0.8608828560669579,
+          "wape": 5.038449382120579,
+          "bias": -1.0841181483949176
+        }
+      }
+    },
+    {
+      "name": "enhanced_depth7",
+      "features": [
+        "hour",
+        "dayofweek",
+        "month",
+        "year",
+        "dayofyear",
+        "quarter",
+        "weekofyear",
+        "hour_sin",
+        "hour_cos",
+        "dayofweek_sin",
+        "dayofweek_cos",
+        "is_weekend",
+        "is_holiday",
+        "Temperature",
+        "Humidity",
+        "temperature_squared",
+        "demand_lag_1h",
+        "demand_lag_2h",
+        "demand_lag_3h",
+        "demand_lag_6h",
+        "demand_lag_12h",
+        "demand_lag_24h",
+        "demand_lag_48h",
+        "demand_lag_72h",
+        "demand_lag_168h",
+        "demand_lag_336h",
+        "demand_rolling_mean_6h",
+        "demand_rolling_std_6h",
+        "demand_rolling_mean_24h",
+        "demand_rolling_std_24h",
+        "demand_rolling_mean_168h",
+        "demand_rolling_std_168h"
+      ],
+      "params": {
+        "n_estimators": 1200,
+        "learning_rate": 0.02,
+        "max_depth": 7,
+        "min_child_weight": 5,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "reg_alpha": 0.1,
+        "reg_lambda": 3.0
+      },
+      "average_validation_metrics": {
+        "mae": 102.85164161535135,
+        "rmse": 128.4858849801199,
+        "r2": 0.9300267282242046,
+        "wape": 3.5723758942905537,
+        "bias": -14.89951613407265
+      },
+      "fold_metrics": [
+        {
+          "mae": 105.19202681766966,
+          "rmse": 131.0685770027907,
+          "r2": 0.9253197357986029,
+          "wape": 3.6291151664304055,
+          "bias": -20.85995448231487
+        },
+        {
+          "mae": 101.31807057474997,
+          "rmse": 126.8307118660437,
+          "r2": 0.9339872385935114,
+          "wape": 3.525401208480166,
+          "bias": -15.756170137845551
+        },
+        {
+          "mae": 102.04482745363445,
+          "rmse": 127.55836607152534,
+          "r2": 0.9307732102804994,
+          "wape": 3.5626113079610895,
+          "bias": -8.082423782057536
+        }
+      ],
+      "average_naive_metrics": {
+        "24-hour naive": {
+          "mae": 177.44949778295452,
+          "rmse": 223.7976347448235,
+          "r2": 0.7879037327707222,
+          "wape": 6.16412940495087,
+          "bias": -0.287953221048228
+        },
+        "168-hour naive": {
+          "mae": 145.0539680201067,
+          "rmse": 181.2246290621663,
+          "r2": 0.8608828560669579,
+          "wape": 5.038449382120579,
+          "bias": -1.0841181483949176
+        }
+      }
+    }
+  ],
+  "data_filename": "electricity_demand_2025.xlsx",
+  "data_sha256": "c264a4001837a2eb3e7e3e6df375fa07e3d314ca7eef28023e0429822dcceaf3",
+  "test_rows": 8666,
+  "synthetic_data": true
+}

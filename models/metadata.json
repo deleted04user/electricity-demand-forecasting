@@ -1,0 +1,166 @@
+{
+  "model_path": "models\\electricity_xgb_prediction_model.pkl",
+  "version": "2026-09-06T19:19:41.232693+00:00",
+  "features": [
+    "hour",
+    "dayofweek",
+    "month",
+    "year",
+    "dayofyear",
+    "quarter",
+    "weekofyear",
+    "hour_sin",
+    "hour_cos",
+    "dayofweek_sin",
+    "dayofweek_cos",
+    "is_weekend",
+    "is_holiday",
+    "Temperature",
+    "Humidity",
+    "temperature_squared",
+    "demand_lag_1h",
+    "demand_lag_2h",
+    "demand_lag_3h",
+    "demand_lag_6h",
+    "demand_lag_12h",
+    "demand_lag_24h",
+    "demand_lag_48h",
+    "demand_lag_72h",
+    "demand_lag_168h",
+    "demand_lag_336h",
+    "demand_rolling_mean_6h",
+    "demand_rolling_std_6h",
+    "demand_rolling_mean_24h",
+    "demand_rolling_std_24h",
+    "demand_rolling_mean_168h",
+    "demand_rolling_std_168h"
+  ],
+  "model_parameters": {
+    "n_estimators": 1328,
+    "learning_rate": 0.02,
+    "max_depth": 5,
+    "min_child_weight": 5,
+    "subsample": 0.85,
+    "colsample_bytree": 0.85,
+    "reg_alpha": 0.1,
+    "reg_lambda": 3.0
+  },
+  "data_filename": "data\\electricity_demand_2025.xlsx",
+  "data_sha256": "c264a4001837a2eb3e7e3e6df375fa07e3d314ca7eef28023e0429822dcceaf3",
+  "model_sha256": "cb098c1db4b70782e4f4642280905e5f31fd2bcab80cb399ece96c6072f957af",
+  "training_period": {
+    "start": "2020-01-15 00:00:00",
+    "end": "2023-12-31 23:00:00"
+  },
+  "early_stopping_period": {
+    "start": "2023-01-01 00:00:00",
+    "end": "2023-12-31 23:00:00"
+  },
+  "test_period": {
+    "start": "2024-01-01 00:00:00",
+    "end": "2024-12-31 23:00:00"
+  },
+  "packaged_metrics": {
+    "MAE": 103.72373756421017,
+    "RMSE": 130.2185613398242,
+    "R2": 0.9280027092876204,
+    "WAPE": 3.5454417655828188,
+    "Bias": -28.58374304540103
+  },
+  "current_causal_test_metrics": {
+    "mae": 103.72,
+    "rmse": 130.22,
+    "r2": 0.928,
+    "wape": 3.55,
+    "bias": -28.58
+  },
+  "baselines": {
+    "24-hour naive": {
+      "mae": 178.25,
+      "rmse": 224.53,
+      "r2": 0.786,
+      "wape": 6.09,
+      "bias": -0.99
+    },
+    "168-hour naive": {
+      "mae": 144.33,
+      "rmse": 181.99,
+      "r2": 0.8594,
+      "wape": 4.93,
+      "bias": -1.15
+    }
+  },
+  "promotion_evaluation": {
+    "outcome": "improved_model_deployed",
+    "selected_candidate": "enhanced_conservative",
+    "candidate_path": "models\\candidates\\electricity_xgb_candidate_20260906T191941Z.pkl",
+    "backup_path": "models\\archive\\electricity_xgb_prediction_model_pre_20260906T191941Z.pkl",
+    "test_rows": 8666,
+    "selection_criterion": "lowest mean rolling-origin validation WAPE; RMSE tie-breaker",
+    "rolling_validation_metrics": {
+      "mae": 102.36701041384474,
+      "rmse": 127.82468631455068,
+      "r2": 0.9307336668650334,
+      "wape": 3.555593920339541,
+      "bias": -12.676129184567566
+    },
+    "held_out_comparison": {
+      "24-hour naive": {
+        "mae": 178.25228479113778,
+        "rmse": 224.52530162308227,
+        "r2": 0.7859570414986135,
+        "wape": 6.092945647256818,
+        "bias": -0.9947103623355646
+      },
+      "168-hour naive": {
+        "mae": 144.33319986152782,
+        "rmse": 181.9918861806726,
+        "r2": 0.8593711516013328,
+        "wape": 4.933537558193848,
+        "bias": -1.1512797138241404
+      },
+      "old XGBoost": {
+        "mae": 112.95289213953957,
+        "rmse": 141.3221704323494,
+        "r2": 0.9152009541498376,
+        "wape": 3.8609088983800373,
+        "bias": -59.98698361637794
+      },
+      "new XGBoost": {
+        "mae": 103.72373756421017,
+        "rmse": 130.2185613398242,
+        "r2": 0.9280027092876204,
+        "wape": 3.5454417655828188,
+        "bias": -28.58374304540103
+      }
+    }
+  },
+  "recursive_backtests": [
+    {
+      "cutoff": "2024-04-01",
+      "horizon": 24,
+      "weather": "historical_proxy",
+      "metrics": {
+        "mae": 111.1,
+        "rmse": 137.08,
+        "r2": 0.9146,
+        "wape": 3.78,
+        "bias": -40.65
+      }
+    },
+    {
+      "cutoff": "2024-10-01",
+      "horizon": 24,
+      "weather": "historical_proxy",
+      "metrics": {
+        "mae": 67.22,
+        "rmse": 92.63,
+        "r2": 0.956,
+        "wape": 2.3,
+        "bias": -16.0
+      }
+    }
+  ],
+  "forecast_scope": "Best evaluated one-step-ahead/short-horizon. Recursive multi-step forecasts are experimental and accumulate error.",
+  "note": "Synthetic local demo. Fixed packaged model; backtests use no post-cutoff demand or weather."
+}
