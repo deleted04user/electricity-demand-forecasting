@@ -58,6 +58,20 @@ data/*.xlsx.bak
 *.log
 .venv-local/
 
+# Local browser profiles, test caches, and report-rendering intermediates
+.chrome-report/
+.pytest_cache/
+frontend/.pytest_cache/
+pytest-cache-files-*/
+tmp/
+
+# LaTeX build sidecars (the final report PDF is kept in output/pdf)
+*.aux
+*.lof
+*.lot
+*.out
+*.toc
+
 # JavaScript dependencies and generated frontend build
 frontend/node_modules/
 node_modules/

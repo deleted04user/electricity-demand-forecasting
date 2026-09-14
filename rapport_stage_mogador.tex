@@ -1,0 +1,275 @@
+% Rapport de stage -- Projet de prevision de la demande electrique
+% Compiler avec: pdflatex rapport_stage_mogador.tex (deux fois)
+\documentclass[12pt,a4paper,oneside]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{caption}
+\geometry{left=3cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+\setlength{\emergencystretch}{3em}
+
+% ---------- Informations a personnaliser ----------
+\newcommand{\Etablissement}{\textbf{[Nom de l'ecole ou universite]}}
+\newcommand{\Filiere}{\textbf{[Filiere et option]}}
+\newcommand{\Etudiant}{\textbf{[Nom et prenom de l'etudiant]}}
+\newcommand{\Annee}{\textbf{[Annee universitaire]}}
+\newcommand{\Periode}{\textbf{[Periode du stage]}}
+\newcommand{\EncadrantEcole}{\textbf{[Nom de l'encadrant pedagogique]}}
+\newcommand{\EncadrantEntreprise}{\textbf{[Nom de l'encadrant MOGADOR TECHNOLOGIE INDUSTRIELLE]}}
+
+% Reserve une zone visible pour une capture ou un diagramme.
+\newcommand{\visualplaceholder}[3]{%
+  \begin{figure}[H]
+  \centering
+  \fbox{\begin{minipage}[c][#2][c]{0.88\textwidth}\centering
+  \textit{Emplacement reserve : #1}\\[0.5em]
+  \small Inserer le fichier final ici avec \texttt{\textbackslash includegraphics}.
+  \end{minipage}}
+  \caption{#3}
+  \end{figure}}
+
+\begin{document}
+
+% ---------- Page de garde ----------
+\begin{titlepage}
+\centering
+\vspace*{1cm}
+\Etablissement\\[0.4cm]
+\Filiere\\[1.2cm]
+\fbox{\parbox[c][2.3cm][c]{5cm}{\centering \small Logo de l'etablissement}}\hfill
+\fbox{\parbox[c][2.3cm][c]{5cm}{\centering \small Logo MOGADOR TECHNOLOGIE INDUSTRIELLE}}\\[1.6cm]
+{\Large \textbf{RAPPORT DE STAGE}}\\[0.5cm]
+{\LARGE \textbf{Prevision horaire de la demande electrique}}\\[0.3cm]
+{\large Conception d'une application de prevision et de suivi de qualite des donnees}\\[1.2cm]
+\begin{tabular}{@{}>{\raggedright\arraybackslash\bfseries}p{5cm}>{\raggedright\arraybackslash}p{8.4cm}@{}}
+Realise par : & \Etudiant\\[0.25cm]
+Entreprise d'accueil : & \textbf{MOGADOR TECHNOLOGIE INDUSTRIELLE}\\[0.25cm]
+Periode : & \Periode\\[0.25cm]
+Encadrant pedagogique : & \EncadrantEcole\\[0.25cm]
+Encadrant entreprise : & \EncadrantEntreprise\\[0.25cm]
+Annee universitaire : & \Annee
+\end{tabular}
+\vfill
+\textit{Document a completer avec les informations administratives validees par MOGADOR TECHNOLOGIE INDUSTRIELLE et l'etablissement.}
+\end{titlepage}
+
+\chapter*{Remerciements}
+\addcontentsline{toc}{chapter}{Remerciements}
+Je remercie la direction de MOGADOR TECHNOLOGIE INDUSTRIELLE pour l'accueil et l'opportunite de realiser ce stage. J'adresse mes remerciements particuliers a mon encadrant en entreprise, a mon encadrant pedagogique et a toutes les personnes ayant contribue aux echanges metier et techniques. Leur accompagnement a permis de transformer un besoin de pilotage de la consommation electrique en une solution logicielle structuree et verifiable.
+
+\chapter*{Resume}
+\addcontentsline{toc}{chapter}{Resume}
+Ce rapport presente la conception et la realisation d'une application de prevision horaire de la demande electrique dans le cadre d'un stage chez MOGADOR. La solution combine un modele XGBoost, des variables calendaires, des retards de demande et des donnees meteorologiques. Elle expose ses resultats au moyen d'une API FastAPI et d'une interface React. Le travail ne se limite pas a la prediction : il introduit un contrat d'ingestion pour les donnees reelles, des controles de qualite, une evaluation separee entre prediction a un pas et prevision recursive, des intervalles d'incertitude estimes, ainsi qu'un processus de reentrainement protege.
+
+Les resultats disponibles proviennent du jeu de donnees synthetique inclus dans le projet. Sur la periode de test 2024 tenue a l'ecart, le modele XGBoost actif atteint une WAPE de 3,55\% et une RMSE de 130,22 MW. Ces mesures constituent une demonstration technique et ne doivent pas etre interpretees comme des performances operationnelles avant validation sur des donnees reelles de MOGADOR.
+
+\textbf{Mots-cles :} prevision de charge, XGBoost, donnees horaires, FastAPI, React, qualite des donnees, incertitude.
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+This report presents the design and implementation of an hourly electricity-demand forecasting application developed during an internship at MOGADOR. The solution combines an XGBoost model with calendar variables, demand lags and weather data. A FastAPI backend and a React interface make forecasts and evaluation results accessible. The project also establishes a local real-data ingestion contract, data-quality checks, separate one-step and recursive evaluations, estimated uncertainty intervals and a safeguarded retraining workflow.
+
+The available results are based on the project's synthetic dataset. On the untouched 2024 test period, the active XGBoost model reaches a 3.55\% WAPE and a 130.22 MW RMSE. These values demonstrate the technical workflow only and require validation on real MOGADOR data before operational use.
+
+\textbf{Keywords:} load forecasting, XGBoost, hourly data, FastAPI, React, data quality, uncertainty.
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\chapter*{Liste des abreviations}
+\addcontentsline{toc}{chapter}{Liste des abreviations}
+\begin{longtable}{p{3cm}p{10cm}}
+API & Application Programming Interface, interface de programmation applicative.\\
+MAE & Mean Absolute Error, erreur absolue moyenne.\\
+RMSE & Root Mean Squared Error, racine de l'erreur quadratique moyenne.\\
+WAPE & Weighted Absolute Percentage Error, erreur absolue ponderee en pourcentage.\\
+XGBoost & Extreme Gradient Boosting, methode d'apprentissage par arbres de decision.\\
+\end{longtable}
+
+\chapter*{Introduction generale}
+\addcontentsline{toc}{chapter}{Introduction generale}
+La consommation electrique varie selon l'heure, le jour, la saison, la meteo et les habitudes d'exploitation. Une estimation fiable de la demande permet de mieux planifier les ressources, d'anticiper les pointes et d'appuyer les decisions de pilotage. Dans ce contexte, le stage chez MOGADOR porte sur la mise en place d'un prototype de prevision horaire de la demande electrique, exploitable a travers une interface web locale.
+
+La problematique est la suivante : comment construire une chaine de prevision qui produise des resultats interpretable, tout en rendant visibles la qualite des donnees, les limites du modele et les conditions necessaires a une utilisation sur des donnees reelles ? Les objectifs sont de concevoir un modele de reference robuste, de proposer une API et un tableau de bord, et de preparer le projet a l'integration future de flux reels de demande et de meteo.
+
+Le premier chapitre presente le contexte et les besoins. Le deuxieme etudie les choix technologiques. Le troisieme decrit l'architecture et le pipeline de donnees. Le quatrieme detaille l'implementation et les tests. Enfin, le cinquieme analyse les resultats, les limites et les perspectives.
+
+\chapter{Contexte et cahier des charges}
+\section{Presentation de l'entreprise d'accueil}
+MOGADOR TECHNOLOGIE INDUSTRIELLE est l'entreprise d'accueil du stage. Cette section doit etre completee a partir d'informations institutionnelles validees : secteur d'activite, organisation, missions, site d'accueil et service de rattachement. Il est important de ne pas ajouter de chiffres, de clients ou de projets non confirmes.
+
+\visualplaceholder{Presentation de MOGADOR TECHNOLOGIE INDUSTRIELLE : logo, organigramme ou photographie autorisee}{5cm}{Presentation de l'entreprise d'accueil}
+
+\section{Contexte metier et problematique}
+Le projet traite la prevision de charge electrique a une granularite horaire. Une prediction calculee a l'avance peut aider a identifier les periodes de forte demande et a mettre a disposition des indicateurs de suivi. Cependant, une prediction n'est exploitable que si les donnees utilisees sont identifiees, completes et compatibles avec le modele.
+
+\section{Analyse de l'existant}
+Le point de depart est un prototype de prevision base sur un jeu de donnees local. La version initiale permettait la consultation de donnees historiques et de predictions. Les principaux axes d'amelioration identifies sont l'explicitation du caractere synthetique des donnees, la formalisation d'un format d'ingestion, la distinction entre meteo observee et meteo future, et la mise en evidence des limites de la prevision multi-horizon.
+
+\section{Expression des besoins}
+\subsection{Besoins fonctionnels}
+\begin{itemize}[leftmargin=*]
+\item Charger localement des donnees horaires de demande, temperature et humidite au format CSV ou XLSX.
+\item Consulter des statistiques, une analyse de demande, des predictions historiques et des previsions futures.
+\item Visualiser la qualite des donnees : doublons, trous horaires, valeurs manquantes, valeurs atypiques et couverture temporelle.
+\item Afficher les performances par horizon et des intervalles de prediction estimes.
+\item Conserver les artefacts candidats lors d'un reentrainement et ne promouvoir un modele que s'il ameliore le test tenu a l'ecart.
+\end{itemize}
+\subsection{Besoins non fonctionnels}
+La solution doit etre locale, reproductible, testable et explicite sur ses hypotheses. Aucun secret ne doit etre code en dur. Les donnees reelles et les previsions meteorologiques externes ne doivent pas etre inventees ni telechargees sans configuration explicite.
+
+\chapter{Etat de l'art et choix technologiques}
+\section{Prevision de la demande electrique}
+Les methodes de prevision incluent les approches naives, les modeles statistiques de series temporelles et les methodes d'apprentissage automatique. Dans ce projet, les baselines a 24 heures et 168 heures servent de points de comparaison. Elles reproduisent respectivement la charge du jour precedent et de la semaine precedente.
+
+Les arbres de decision par gradient boosting sont pertinents lorsque les variables explicatives combinent calendrier, meteo et retards de demande. XGBoost a ete retenu car il gere les relations non lineaires, fournit une importance des variables et s'integre simplement a un pipeline Python.
+
+\begin{table}[H]
+\centering
+\caption{Comparaison qualitative des approches envisagees}
+\begin{tabular}{>{\raggedright\arraybackslash}p{3cm}>{\raggedright\arraybackslash}p{3cm}>{\raggedright\arraybackslash}p{3cm}>{\raggedright\arraybackslash}p{3cm}}
+\toprule
+Approche & Atout & Limite & Decision\\
+\midrule
+Naive 24h / 168h & Tres interpretable, rapide & Ne capture pas les variations complexes & Baseline\\
+ARIMA/SARIMA & Base statistique connue & Parametrage delicat avec plusieurs variables & Non retenue pour le prototype\\
+Reseau LSTM & Peut modeliser des sequences longues & Besoin de plus de donnees et de reglages & Non retenue a ce stade\\
+XGBoost & Efficace sur variables tabulaires, interpretable & Prevision recursive sensible a l'accumulation d'erreurs & Retenue\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Technologies retenues}
+Le backend est developpe avec Python, Pandas, XGBoost et FastAPI. Le frontend utilise React et Vite. Les tests backend sont executes avec Pytest et les tests frontend avec Vitest. Cette separation facilite la reutilisation des fonctions de caracteristiques et d'evaluation entre l'API, les tests et le processus de reentrainement.
+
+\chapter{Conception et architecture}
+\section{Methodologie de travail}
+Le travail est organise en iterations courtes : analyse du comportement existant, ajout d'une amelioration, creation de tests cibles, puis verification du build. Cette approche convient a un prototype logiciel car elle limite les regressions et conserve une trace des decisions techniques.
+
+\section{Architecture globale}
+L'application comporte trois couches. La couche donnees lit les fichiers locaux et applique les controles de qualite. La couche metier construit les variables causales, effectue les predictions et calcule les metriques. La couche presentation expose les resultats via FastAPI et React.
+
+\visualplaceholder{Diagramme d'architecture : fichiers locaux, backend FastAPI, modele XGBoost, frontend React}{6cm}{Architecture fonctionnelle de la solution}
+
+\section{Pipeline de donnees et caracteristiques}
+Les colonnes requises sont \texttt{Timestamp}, \texttt{Demand}, \texttt{Temperature} et \texttt{Humidity}. Les observations doivent etre horaires. Les controles detectent les doublons, les lacunes, les valeurs manquantes et les valeurs atypiques. La meteo peut etre propagee uniquement vers l'avant pour eviter d'utiliser une information future. La demande n'est pas imputee comme cible ; elle est uniquement propagee dans l'historique causal necessaire aux retards.
+
+Les variables incluent l'heure, le jour de semaine, le mois, des encodages cycliques, les jours feries, la temperature, son carre, des retards de 1 a 336 heures et des statistiques glissantes. Cette construction assure que les variables de demande utilisees pour une heure donnee proviennent strictement du passe.
+
+\visualplaceholder{Schema du pipeline : ingestion, validation, features, modele, API et interface}{6cm}{Pipeline de traitement et de prevision}
+
+\section{Evaluation et incertitude}
+Les performances a un pas utilisent les retards et la meteo observes. Les performances multi-pas sont calculees en mode recursif : une prediction peut alimenter les retards suivants. Les deux types de resultats sont presentes separement pour eviter une interpretation abusive.
+
+Un intervalle empirique a 90\% est construit a partir des residus absolus du jeu de test. Pour les horizons recursifs, son rayon augmente suivant une regle en racine de l'horizon. Cet intervalle est une estimation et non une garantie de couverture.
+
+\chapter{Realisation et implementation}
+\section{Environnement de developpement}
+Le projet est organise autour des dossiers \texttt{backend}, \texttt{frontend}, \texttt{data} et \texttt{models}. FastAPI fournit les endpoints REST ; React affiche les pages Apercu, Analyse de la demande, Performance du modele et Prevision. Les pages de graphiques sont chargees a la demande pour reduire le poids initial du frontend.
+
+\section{Contrat d'ingestion des donnees reelles}
+La variable d'environnement \texttt{ELECTRICITY\_DATA\_PATH} indique un fichier local CSV, XLSX ou XLS. La variable \texttt{WEATHER\_FORECAST\_PATH} peut pointer vers un fichier local de previsions meteorologiques contenant \texttt{Timestamp}, \texttt{Temperature} et \texttt{Humidity}. Sans fichier configure, l'application utilise un proxy historique explicitement affiche comme tel. Les evenements non publics sont ajoutes uniquement depuis un fichier verifie, configure avec \texttt{VERIFIED\_EVENTS\_PATH} et contenant \texttt{Date} et \texttt{Event}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.93\textwidth]{figures/capture_prevision.png}
+\caption{Interface de prevision future executee localement}
+\end{figure}
+
+\section{Workflow de reentrainement protege}
+Le reentrainement est volontairement manuel. La commande suivante refuse le jeu synthetique integre :
+\begin{center}
+\small\texttt{python -m backend.modeling --train --data}\\
+\texttt{chemin\_vers\_donnees\_reelles.csv}
+\end{center}
+Elle conserve un artefact candidat, emploie des validations chronologiques et compare le candidat au modele actif sur le holdout 2024. La promotion n'est realisee que si la WAPE ou la RMSE s'ameliore strictement sur les memes lignes valides.
+
+\section{Tests}
+Les tests verifient les caracteristiques causales, les validations de l'API, la prevision recursive, les metriques, le contrat d'ingestion, la qualite des donnees et l'affichage frontend. La verification finale comprend les tests Pytest, les tests Vitest et la construction du frontend avec Vite.
+
+\visualplaceholder{Capture du terminal montrant les tests Pytest, Vitest et le build Vite}{5cm}{Verification automatisee du projet}
+
+\chapter{Resultats et discussion}
+\section{Resultats sur le jeu de demonstration}
+Le modele XGBoost actif a ete evalue sur une periode de test 2024 non utilisee pendant l'entrainement ni l'arret anticipe. Le tableau \ref{tab:resultats} reprend les indicateurs documentes dans le projet. Les valeurs sont liees au jeu de demonstration synthetique.
+
+\begin{table}[H]
+\centering
+\caption{Resultats sur le holdout synthetique 2024}
+\label{tab:resultats}
+\begin{tabular}{lrrrr}
+\toprule
+Modele & MAE (MW) & RMSE (MW) & R$^2$ & WAPE (\%)\\
+\midrule
+Naive 24 heures & 178,25 & 224,53 & 0,7860 & 6,09\\
+Naive 168 heures & 144,33 & 181,99 & 0,8594 & 4,93\\
+XGBoost precedent & 112,95 & 141,32 & 0,9152 & 3,86\\
+XGBoost actif & \textbf{103,72} & \textbf{130,22} & \textbf{0,9280} & \textbf{3,55}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Ces resultats montrent une amelioration par rapport aux baselines et a l'ancien modele dans le cadre du jeu synthetique. Ils ne valident pas encore une utilisation en production chez MOGADOR. La validation operationnelle necessite des donnees historiques reelles, un referentiel de fuseau horaire confirme et des previsions meteorologiques disponibles au moment de la prediction.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.93\textwidth]{figures/capture_performance_modele.png}
+\caption{Performances du modele, baselines et horizons sur le holdout}
+\end{figure}
+
+\section{Limites identifiees}
+La principale limite est l'absence de donnees operationnelles reelles dans le depot. Les valeurs de meteo futures peuvent etre fournies par fichier, mais aucun fournisseur externe n'est branche sans identifiants. Enfin, les previsions recursives accumulent des erreurs a mesure que l'horizon augmente. Les intervalles affiches doivent donc etre lus comme des estimations empiriques et non comme des garanties.
+
+\chapter*{Conclusion generale et perspectives}
+\addcontentsline{toc}{chapter}{Conclusion generale et perspectives}
+Le stage a abouti a une application locale de prevision de demande electrique fondee sur XGBoost. La solution fournit une interface web, une API, des metriques de test et des mecanismes qui preparent l'integration de donnees reelles : contrat d'ingestion, controles de qualite, gestion explicite de la meteo future, intervalles estimes et reentrainement protege.
+
+Les prochaines etapes sont l'obtention et la validation de donnees reelles de MOGADOR, la definition d'un protocole de mise a jour des donnees, l'integration d'une source meteorologique autorisee, l'ajout de variables metier verifiees et l'evaluation continue des performances par horizon. Une comparaison avec des modeles probabilistes ou des approches de prevision directe par horizon pourra egalement etre etudiee.
+
+\begin{thebibliography}{9}
+\bibitem{xgboost} T. Chen et C. Guestrin, ``XGBoost: A Scalable Tree Boosting System'', Proceedings of KDD, 2016.
+\bibitem{fastapi} FastAPI, ``FastAPI Documentation''. \url{https://fastapi.tiangolo.com/}.
+\bibitem{react} React, ``React Documentation''. \url{https://react.dev/}.
+\bibitem{project} Documentation interne du projet, \texttt{README.md}, consultee dans le depot local.
+\end{thebibliography}
+
+\appendix
+\chapter{Guide d'insertion des captures et diagrammes}
+Chaque encadre du rapport est une zone reservee. Remplacer, par exemple, un appel a \texttt{\textbackslash visualplaceholder} par :
+\begin{verbatim}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth]{figures/nom-de-la-capture.png}
+  \caption{Description precise de la capture}
+  \label{fig:nom-capture}
+\end{figure}
+\end{verbatim}
+Creer un dossier \texttt{figures} a cote de ce fichier \LaTeX{} et utiliser des images autorisees par MOGADOR. Pour les diagrammes, privilegier des exports PDF ou PNG lisibles.
+
+\chapter{Commandes de verification}
+\begin{verbatim}
+python -m pytest backend/tests -q
+cd frontend
+npm exec vitest run
+npm run build
+\end{verbatim}
+
+\input{rapport_annexes_detaillees.tex}
+
+\end{document}
