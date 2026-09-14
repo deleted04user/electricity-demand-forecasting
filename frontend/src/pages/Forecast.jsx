@@ -22,8 +22,10 @@ export default function Forecast() {
 
   useEffect(() => {
     if (!date) return;
-    setError(null);
-    api.forecast(date, hour).then(setResult).catch((e) => {
+    api.forecast(date, hour).then((value) => {
+      setResult(value);
+      setError(null);
+    }).catch((e) => {
       setError(e.message);
       setResult(null);
     });
