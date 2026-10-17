@@ -1,14 +1,24 @@
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || window.location.origin).replace(/\/+$/, "");
+
+async function readResponse(res) {
+  const body = await res.json().catch(() => {
+    if (res.ok) throw new Error("Backend returned an invalid JSON response");
+    return {};
+  });
+  if (!res.ok) {
+    // Validation errors can contain structured FastAPI details; never render an
+    // object as a React child or expose an HTML proxy error to the dashboard.
+    const detail = typeof body?.detail === "string" ? body.detail : null;
+    throw new Error(detail || `Request failed: ${res.status}`);
+  }
+  return body;
+}
 
 async function get(path, params = {}) {
   const url = new URL(BASE_URL + path);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   const res = await fetch(url);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed: ${res.status}`);
-  }
-  return res.json();
+  return readResponse(res);
 }
 
 export const api = {
@@ -21,9 +31,7 @@ export const api = {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ start, horizon }),
     });
-    const body = await res.json();
-    if (!res.ok) throw new Error(typeof body.detail === "string" ? body.detail : "Invalid forecast request");
-    return body;
+    return readResponse(res);
   },
   meta: () => get("/api/meta"),
 };

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor, fireEvent, cleanup } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, cleanup, act } from "@testing-library/react";
 import mockPayloads from "../mock_payloads.json";
 import Overview from "./pages/Overview";
 import DemandAnalysis from "./pages/DemandAnalysis";
@@ -86,4 +86,30 @@ it("shows a future API error", async () => {
   await waitFor(() => expect(button.disabled).toBe(false));
   fireEvent.click(button);
   expect(await screen.findByText("not mocked")).toBeTruthy();
+});
+
+it("keeps the latest selected hour when historical requests finish out of order", async () => {
+  const pending = new Map();
+  global.fetch = vi.fn((url) => {
+    const request = new URL(url);
+    if (request.pathname === "/api/meta") {
+      return Promise.resolve({ ok: true, json: async () => mockPayloads.meta });
+    }
+    return new Promise((resolve) => pending.set(request.searchParams.get("hour"), resolve));
+  });
+  render(<Forecast />);
+  await waitFor(() => expect(pending.has("12")).toBe(true));
+  fireEvent.change(screen.getByRole("slider"), { target: { value: "13" } });
+  await waitFor(() => expect(pending.has("13")).toBe(true));
+  expect(screen.getByRole("status").textContent).toContain("Loading historical forecast");
+
+  await act(async () => {
+    pending.get("13")({ ok: true, json: async () => ({ ...mockPayloads.forecast, actual: 1234 }) });
+  });
+  expect(await screen.findByText("1234 MW")).toBeTruthy();
+  await act(async () => {
+    pending.get("12")({ ok: true, json: async () => ({ ...mockPayloads.forecast, actual: 9999 }) });
+  });
+  expect(screen.getByText("1234 MW")).toBeTruthy();
+  expect(screen.queryByText("9999 MW")).toBeNull();
 });

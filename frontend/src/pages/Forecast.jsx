@@ -22,13 +22,19 @@ export default function Forecast() {
 
   useEffect(() => {
     if (!date) return;
+    let active = true;
     api.forecast(date, hour).then((value) => {
+      if (!active) return;
       setResult(value);
       setError(null);
     }).catch((e) => {
+      if (!active) return;
       setError(e.message);
       setResult(null);
     });
+    // Slower requests for an earlier date/hour must not replace the selection
+    // currently visible in the controls.
+    return () => { active = false; };
   }, [date, hour]);
 
   return (
@@ -68,14 +74,14 @@ export default function Forecast() {
               value={date}
               min={meta.min_date}
               max={meta.max_date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => { setDate(e.target.value); setResult(null); setError(null); }}
             />
           </label>
           <label style={{ flex: 1 }}>
             Hour: {hour}:00
             <input
               type="range" min="0" max="23" value={hour}
-              onChange={(e) => setHour(Number(e.target.value))}
+              onChange={(e) => { setHour(Number(e.target.value)); setResult(null); setError(null); }}
               style={{ width: "100%" }}
             />
           </label>
@@ -83,6 +89,7 @@ export default function Forecast() {
       )}
 
       {error && <div className="error">{error} <button onClick={() => window.location.reload()}>Retry backend connection</button></div>}
+      {date && !result && !error && <div className="loading" role="status">Loading historical forecast…</div>}
 
       {result && (
         <>

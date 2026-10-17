@@ -12,7 +12,7 @@ export default function Overview() {
     api.overview().then(setData).catch((e) => setError(e.message));
   }, []);
 
-  if (error) return <div className="error">Failed to load: {error}. Is the backend running on :8000?</div>;
+  if (error) return <div className="error">Failed to load: {error}. Check the API connection and retry.</div>;
   if (!data) return <div className="loading">Loading overview...</div>;
 
   return (
