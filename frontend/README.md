@@ -1,16 +1,28 @@
-# React + Vite
+# Electricity demand dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React/Vite dashboard for the repository's FastAPI service. It provides demand summaries, seasonal analysis, model diagnostics, historical comparisons, and experimental recursive forecasts. The bundled data is synthetic; see the [project README](../README.md) for model scope and limitations.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Use Node.js 24.15+ (24.x LTS) and npm. Start the backend on port 8000 using the [running guide](../RUNNING_THE_REACT_DASHBOARD.md), then run from this directory:
 
-## React Compiler
+```bash
+npm ci
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Open [localhost:5173](http://localhost:5173). Vite forwards `/api` to `http://127.0.0.1:8000`. Same-origin requests also work in the Docker deployment, where nginx forwards `/api` to FastAPI.
 
-## Expanding the Oxlint configuration
+To call another API origin, copy `.env.example` to `.env`, set `VITE_API_BASE_URL` (for example `http://localhost:9000`), and restart Vite. The value is embedded into the browser bundle at build time, so it is public and must not contain credentials. Configure the backend's `CORS_ORIGINS` for the dashboard's browser origin when using a separate API origin. Leaving the value blank uses the same-origin `/api` route.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Checks and production build
+
+```bash
+npm run check
+```
+
+This runs Oxlint, Vitest component tests, and the Vite production build. Individual commands are `npm run lint`, `npm test`, and `npm run build`. Tests use Testing Library and jsdom. Build output is written to `dist/`.
+
+`npm run preview` serves the build for local inspection. For deployment, use the repository's [Docker Compose setup](../compose.yaml), or serve `dist/` with an `/api` reverse proxy. If using a separate API origin, set `VITE_API_BASE_URL` before building.
+
+Use `npm ci` to install exactly the committed lock file. Commit `package-lock.json` together with intentional dependency changes; run the complete check after updating it.

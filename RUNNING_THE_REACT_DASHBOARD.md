@@ -1,38 +1,85 @@
-# Running the local React + FastAPI demo
+# Running the React + FastAPI demo
 
-Use Python 3.12 or 3.13 and Node.js 22.12+ with npm. The existing `.venv` is machine-specific (it references another user's Python); leave it untouched. From PowerShell:
+The demo runs locally without credentials or network data feeds. Its bundled workbook is synthetic and its recursive forecasts are experimental. Use Python 3.12 and Node.js 24.15+ (24.x LTS) with npm, or Docker with Compose.
 
-```powershell
-cd C:\Users\oussa\OneDrive\Desktop\electricity-project-2
-python -m venv .venv-local
-.\.venv-local\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m uvicorn backend.main:app --reload --port 8000
+## Docker Compose
+
+From the repository root with Docker's engine running:
+
+```bash
+docker compose up --build
 ```
 
-Alternatively, after activation, `cd backend` and run `python -m uvicorn main:app --reload --port 8000`. Both resolve artifacts relative to source files. Health: http://localhost:8000/api/health; interactive API contract: http://localhost:8000/docs. Missing/corrupt artifacts fail startup explicitly.
+Open the [dashboard](http://localhost:8080), [API docs](http://localhost:8000/docs), and [health endpoint](http://localhost:8000/api/health). Nginx forwards the frontend's `/api` requests to FastAPI. Stop the stack with `docker compose down`. To use different host ports, set `FRONTEND_PORT` and `API_PORT` in your shell or root `.env` before starting Compose.
 
-In a second PowerShell terminal:
+## Windows PowerShell
+
+Open a terminal at the cloned repository root. These commands use the virtual environment's interpreter directly, so PowerShell script-activation policies do not need changing:
 
 ```powershell
-cd C:\Users\oussa\OneDrive\Desktop\electricity-project-2\frontend
-npm ci
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --require-hashes -r requirements-api.lock.txt
 Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --env-file .env --reload --port 8000
+```
+
+If `py -3.12` is unavailable, use a Python 3.12 installation's `python` command. Virtual environments are specific to their machine and interpreter; create a fresh one after cloning. If `.venv` already belongs to a different interpreter, create `.venv-local` and substitute that name in the commands.
+
+In a second terminal at the same repository root:
+
+```powershell
+cd frontend
+npm ci
 npm run dev
 ```
 
-Open http://localhost:5173. Set `VITE_API_BASE_URL` in frontend/.env before starting/building Vite. Set `$env:CORS_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"` before starting the backend to override permitted browser origins. No external services are needed.
+Open [localhost:5173](http://localhost:5173). Vite proxies `/api` requests to `http://127.0.0.1:8000`. The backend's interactive API contract is at [localhost:8000/docs](http://localhost:8000/docs).
 
-From the project root with the new environment activated:
+## macOS / Linux
 
-```powershell
-python -m pytest backend/tests -q
-python -m backend.modeling --train
-python -m backend.evaluate
-python -m backend.evaluate --manifest
-python -m streamlit run dashboard.py
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --require-hashes -r requirements-api.lock.txt
+cp .env.example .env
+python -m uvicorn backend.main:app --env-file .env --reload --port 8000
 ```
 
-Run the training command only for an intentional bounded retraining pass; it preserves a candidate and promotes it only after a better 2024 WAPE or RMSE. The final command starts the optional legacy Streamlit UI. In frontend, verification commands are `npm run build` and `npm exec vitest run`.
+Use the same frontend commands from a second terminal. Keep both servers running while using the dashboard.
 
-`GET /api/forecast?date=2024-12-31&hour=12` is historical comparison. `POST /api/forecast/future` accepts JSON such as `{"start":"2025-01-01T00:00:00","horizon":24}`. Start must equal `/api/meta`'s `future_start` (the hour after packaged history, timezone-naive); horizon is an integer 1–168. Optional `temperature` and `humidity` arrays must both contain exactly horizon finite numbers; humidity is 0–100%. Omitted weather uses historical month/hour means, with hour means as fallback, never a real weather forecast. This recursive mode is experimental: predictions feed subsequent lag/rolling inputs and errors accumulate. Missing historical demand is forward-filled for feature history only; missing actual targets remain excluded from scoring.
+## Configure local inputs
+
+Uvicorn loads the root `.env` only when passed `--env-file .env`. Restart the backend after changing its configuration. Leave optional file paths unset to run the packaged demo. See [the data contract](README.md#local-data-configuration) before supplying another source.
+
+Frontend configuration is separate: copy `frontend/.env.example` to `frontend/.env` only when you need an API URL override. `VITE_API_BASE_URL` is public browser configuration, read by Vite when starting or building. It must never contain secrets. For a different API origin, also set the backend's `CORS_ORIGINS` to the actual dashboard origin.
+
+For Docker, paths in backend configuration must exist inside the container. Mount external input files and pass the corresponding container paths through Compose's `environment` or `env_file`; a host path alone does not make a file available inside a container.
+
+## Make a forecast request
+
+With the backend running, this PowerShell example uses the correct next forecast hour from API metadata:
+
+```powershell
+$metadata = Invoke-RestMethod http://localhost:8000/api/meta
+$requestBody = @{ start = $metadata.future_start; horizon = 24 } | ConvertTo-Json
+Invoke-RestMethod http://localhost:8000/api/forecast/future -Method Post -ContentType 'application/json' -Body $requestBody
+```
+
+`start` must exactly equal `future_start` without a timezone suffix. `horizon` is an integer from 1 to 168. To supply weather, include both `temperature` and `humidity` arrays with one finite value per requested hour; humidity must be 0–100. Otherwise, the API uses a configured local weather file or labels its historical weather proxy. Predicted demand feeds subsequent lag features; historical one-step metrics do not measure accuracy across the full recursive horizon.
+
+## Verification and optional tools
+
+Install `requirements-dev.lock.txt` for the Python quality tools and tests, then follow [CONTRIBUTING.md](CONTRIBUTING.md). In `frontend/`, `npm run check` runs lint, tests, and the production build. Build output is `frontend/dist/`; `npm run preview` serves it for local inspection.
+
+For the optional legacy UI, install `requirements.lock.txt` with `python -m pip install --require-hashes -r requirements.lock.txt` in a separate environment, then run `python -m streamlit run dashboard.py`. That broader environment is separate from the API runtime. Retraining is an intentional artifact-changing operation; follow [the training contract](README.md#evaluation-and-retraining) and provide verified data with `--data`.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Docker cannot connect to its engine | Start Docker Desktop or your Docker engine before running Compose. |
+| Port 8000, 5173, or 8080 is in use | Stop the conflicting process or choose another port; update the Vite proxy/API override when changing the backend port. |
+| Dashboard reports an API/network error | Open `/api/health` on port 8000, confirm the backend is running, and check `VITE_API_BASE_URL` and CORS when using separate origins. |
+| Backend fails at startup | Read the reported error; confirm the workbook and trusted model artifact exist and the configured input satisfies its schema. |
+| Forecast returns a validation error | Use `/api/meta`'s exact `future_start`, an integer horizon within 1–168, and complete weather arrays when supplied. |
+| Data-quality status requires attention | Inspect reported gaps, duplicates, and missing values before using the predictions. |

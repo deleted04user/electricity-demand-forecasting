@@ -1,47 +1,67 @@
-<div align="center">
-
 # Electricity Demand Forecasting
 
-### Leakage-safe forecasting with an explainable React + FastAPI dashboard
-
 [![Quality](https://github.com/deleted04user/electricity-demand-forecasting/actions/workflows/quality.yml/badge.svg)](https://github.com/deleted04user/electricity-demand-forecasting/actions/workflows/quality.yml)
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![XGBoost](https://img.shields.io/badge/Model-XGBoost-FF6600)
-![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
-![React](https://img.shields.io/badge/UI-React-61DAFB?logo=react&logoColor=111827)
 
-An end-to-end portfolio project for hourly demand analysis, causal feature engineering, model evaluation, historical comparison, and experimental 1–168 hour forecasting.
+Hourly demand analysis and XGBoost forecasting, served by FastAPI with a React dashboard. The repository includes causal feature engineering, chronological evaluation, naive baselines, data-quality reporting, and an experimental 1–168 hour recursive forecast.
 
-> This repository uses **synthetic demonstration data**. Its results are not operational forecasts and must not be used for grid or commercial decisions without validation on verified real data.
-
-</div>
+**The bundled workbook is synthetic demonstration data.** Its metrics demonstrate the implementation; they do not establish forecasting accuracy for a real electricity system. Retrain and validate on verified real data before operational or commercial forecasting use.
 
 ![Dashboard overview](figures/capture_vue_ensemble.png)
 
-## Why this project stands out
+## Run with Docker
 
-- Uses chronological splits and expanding rolling-origin validation instead of random time-series splits
-- Builds demand features strictly from past observations to prevent target leakage
-- Compares XGBoost against 24-hour and 168-hour naive baselines
-- Records model lineage, feature order, checksums, evaluation periods, and promotion evidence
-- Exposes analysis and forecasts through a documented FastAPI service
-- Provides both a modern React dashboard and an optional Streamlit interface
-- Includes backend API/model tests and frontend component, lint, and production-build checks
+Install Docker with Compose, start its engine, and run from the repository root:
 
-## Verified model performance
+```bash
+docker compose up --build
+```
 
-The active model was evaluated once on 8,666 usable rows from the untouched 2024 holdout.
+Open the dashboard at [localhost:8080](http://localhost:8080), the API documentation at [localhost:8000/docs](http://localhost:8000/docs), or the health endpoint at [localhost:8000/api/health](http://localhost:8000/api/health). The frontend forwards `/api` requests to the backend. No credentials or external data services are required for the bundled demo.
 
-| Model | MAE (MW) | RMSE (MW) | R² | WAPE | Bias (MW) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 24-hour naive | 178.25 | 224.53 | 0.7860 | 6.09% | -0.99 |
-| 168-hour naive | 144.33 | 181.99 | 0.8594 | 4.93% | -1.15 |
-| Previous XGBoost | 112.95 | 141.32 | 0.9152 | 3.86% | -59.99 |
-| **Active XGBoost** | **103.72** | **130.22** | **0.9280** | **3.55%** | **-28.58** |
+Stop with `docker compose down`. `API_PORT` and `FRONTEND_PORT` optionally override the default published ports. See [the local running guide](RUNNING_THE_REACT_DASHBOARD.md) for configuration and troubleshooting.
 
-Bias is `mean(prediction - actual)`; a negative value indicates underforecasting.
+## Run from source
 
-## System architecture
+Use **Python 3.12** and **Node.js 24.15+ (24.x LTS)** with npm. Runtime and development Python dependencies have separate lock files; `requirements.lock.txt` adds optional notebooks and the legacy Streamlit dashboard.
+
+```bash
+git clone https://github.com/deleted04user/electricity-demand-forecasting.git
+cd electricity-demand-forecasting
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --require-hashes -r requirements-api.lock.txt
+cp .env.example .env
+python -m uvicorn backend.main:app --env-file .env --reload --port 8000
+```
+
+On Windows PowerShell, activate with `.\.venv\Scripts\Activate.ps1` and copy the environment example with `Copy-Item .env.example .env`. [The running guide](RUNNING_THE_REACT_DASHBOARD.md) includes complete PowerShell commands without requiring activation.
+
+In a second terminal:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Open [localhost:5173](http://localhost:5173). Vite proxies `/api` to the backend at `127.0.0.1:8000`; an optional `VITE_API_BASE_URL` overrides that behavior. See [frontend/README.md](frontend/README.md).
+
+## Verify a checkout
+
+From the root, with the Python environment active:
+
+```bash
+python -m pip install --require-hashes -r requirements-dev.lock.txt
+python -m ruff check backend
+python -m ruff format --check backend
+python -m mypy backend
+python -m pytest --cov=backend --cov-report=term-missing
+python -m pip_audit --strict --disable-pip -r requirements-api.lock.txt
+```
+
+Then run `npm ci` and `npm run check` from `frontend/` for lint, component tests, and a production build. CI runs the backend checks on Linux and Windows and checks the frontend and containers. Coverage requirements are defined in [pyproject.toml](pyproject.toml); current results are available in the [Quality workflow](https://github.com/deleted04user/electricity-demand-forecasting/actions/workflows/quality.yml). See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
+
+## Architecture and methodology
 
 ```mermaid
 flowchart TD
@@ -53,143 +73,80 @@ flowchart TD
     D --> G[Evaluation and lineage metadata]
 ```
 
-## Product views
+[backend/features.py](backend/features.py) is shared by training and serving. It builds demand lags from 1 to 336 hours, rolling mean and standard deviation after shifting demand by one hour, calendar and Moroccan public-holiday signals, cyclical time encodings, and weather features. Weather is forward-filled only; missing demand targets are excluded from evaluation.
 
-| Forecast | Model performance |
-| --- | --- |
-| ![Forecast view](figures/capture_prevision.png) | ![Model performance](figures/capture_performance_modele.png) |
+[backend/modeling.py](backend/modeling.py) uses chronological boundaries, three expanding 2023 validation folds, and a bounded eight-configuration search. Candidate selection minimizes mean validation WAPE, with RMSE as the tie-breaker. The selected configuration is then evaluated on common usable 2024 rows against the active model and 24-hour/168-hour naive baselines. Candidates and promotion reports retain evaluation evidence.
 
-## Methodology
+### Bundled model evaluation
 
-### Causal features
+These values are recorded in [models/metadata.json](models/metadata.json), using 8,666 usable rows in the synthetic 2024 holdout. Historical metrics use observed prior demand and weather.
 
-`backend/features.py` is shared by training and serving.
+| Model | MAE (MW) | RMSE (MW) | R² | WAPE | Bias (MW) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 24-hour naive | 178.25 | 224.53 | 0.7860 | 6.09% | -0.99 |
+| 168-hour naive | 144.33 | 181.99 | 0.8594 | 4.93% | -1.15 |
+| Active XGBoost | 103.72 | 130.22 | 0.9280 | 3.55% | -28.58 |
 
-- Demand lags: 1, 2, 3, 6, 12, 24, 48, 72, 168, and 336 hours
-- Rolling mean and standard deviation: 6, 24, and 168 hours, after shifting demand by one hour
-- Calendar signals: hour, weekday, month, year, day-of-year, quarter, ISO week, weekend, and Moroccan public holidays
-- Cyclical encodings: hour and weekday sine/cosine components
-- Weather: temperature, humidity, and temperature squared
+Bias is `mean(prediction - actual)`. The future endpoint feeds earlier predictions into later lag features, so its error can grow with horizon. Without supplied future weather, it explicitly labels its historical month/hour proxy. Empirical 90% prediction intervals are estimates, not guarantees.
 
-Weather is forward-filled only. Demand targets are never imputed for evaluation.
+## API
 
-### Evaluation design
-
-`backend/modeling.py` defines chronological boundaries, three expanding 2023 validation folds, a bounded eight-configuration search, naive baselines, and guarded artifact promotion. Candidate selection uses mean validation WAPE with RMSE as the tie-breaker. The untouched 2024 period is scored only after selection.
-
-### Forecast scope
-
-Historical metrics represent one-step-ahead/short-horizon performance with observed prior demand and weather. The future endpoint is experimental: later lag features consume earlier predictions, so uncertainty can grow with horizon. Without verified future weather, the system uses a labeled historical month/hour proxy—not a weather forecast.
-
-## Quick start
-
-### Requirements
-
-- Python 3.12+
-- Node.js 22+
-- npm
-
-### Backend
-
-```bash
-git clone https://github.com/deleted04user/electricity-demand-forecasting.git
-cd electricity-demand-forecasting
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-api.txt
-python -m uvicorn backend.main:app --reload --port 8000
-```
-
-On Windows PowerShell, activate with `.\\.venv\\Scripts\\Activate.ps1`.
-
-API documentation: `http://localhost:8000/docs`
-
-### Frontend
-
-```bash
-cd frontend
-cp .env.example .env
-npm ci
-npm run dev
-```
-
-Dashboard: `http://localhost:5173`
-
-For complete Windows instructions, see [RUNNING_THE_REACT_DASHBOARD.md](RUNNING_THE_REACT_DASHBOARD.md).
-
-## API surface
+Interactive request and response schemas are available at `/docs` and `/openapi.json`.
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /api/health` | Service, artifact, and data-quality status |
-| `GET /api/meta` | Date range, configuration, and compatibility metadata |
+| `GET /api/health` | Service, model, and data-quality status |
+| `GET /api/meta` | Historical date range, next forecast start, and configuration |
 | `GET /api/overview` | Summary statistics and daily demand series |
 | `GET /api/demand-analysis` | Hourly/monthly patterns and correlations |
 | `GET /api/model-performance` | Metrics, baselines, feature importance, and diagnostics |
-| `GET /api/forecast` | Historical actual-versus-predicted comparison |
+| `GET /api/forecast?date=2024-12-31&hour=12` | Historical actual-versus-predicted comparison |
 | `POST /api/forecast/future` | Experimental recursive future forecast |
 
-## Operational data contract
+For future forecasts, use `future_start` from `/api/meta` as the timezone-naive `start`, and an integer `horizon` from 1 to 168. Optional `temperature` and `humidity` arrays must both contain exactly `horizon` finite numbers; humidity must be within 0–100. Explicit arrays take precedence over a configured weather file. See [the running guide](RUNNING_THE_REACT_DASHBOARD.md) for an executable request.
 
-Set `ELECTRICITY_DATA_PATH` to a local `.csv`, `.xlsx`, or `.xls` containing:
+Responses include an `X-Request-ID` for correlating requests with structured JSON logs on stderr. Request logs record method, path, status, and duration; they omit query strings and request bodies. Unexpected failures include error details for diagnosis.
 
-| Column | Contract |
+## Local data configuration
+
+Copy [.env.example](.env.example) to `.env` and pass `--env-file .env` to Uvicorn. Environment values are read when the backend starts; restart it after changes.
+
+| Variable | Purpose / default |
 | --- | --- |
-| `Timestamp` | Unique, sortable, unambiguous hourly timestamps |
-| `Demand` | Numeric demand target |
-| `Temperature` | Numeric temperature |
-| `Humidity` | Numeric percentage |
+| `ELECTRICITY_DATA_PATH` | Local demand CSV/XLSX; defaults to the bundled workbook |
+| `ELECTRICITY_TIMEZONE` | Local clock timezone for aware demand timestamps; `Africa/Casablanca` |
+| `WEATHER_FORECAST_PATH` | Optional local future-weather CSV/XLSX |
+| `VERIFIED_EVENTS_PATH` | Optional local CSV/XLSX containing `Date` and `Event` |
+| `CORS_ORIGINS` | Comma-separated allowed browser origins; local Vite origins by default |
 
-Optional configuration:
+Demand data requires `Timestamp`, `Demand`, `Temperature`, and `Humidity`. Use unique timestamps aligned to whole hours and numeric measurements; use either naive local timestamps or consistently timezone-aware timestamps. Invalid timestamps, non-finite measurements, negative demand, and humidity outside 0–100 are rejected. Explicit missing values and hourly gaps remain visible in the quality report. The weather file requires `Timestamp`, `Temperature`, and `Humidity` covering every requested future hour, with aware timestamps converted to the configured local clock. CSV, XLSX, and legacy XLS readers are included in the locked API environment.
 
-- `WEATHER_FORECAST_PATH`: local file with `Timestamp`, `Temperature`, and `Humidity` for each future hour
-- `VERIFIED_EVENTS_PATH`: local file with `Date` and `Event`
-- `CORS_ORIGINS`: comma-separated browser origins
+The quality report flags duplicate timestamps, gaps, missing values, outliers, and compatibility with the model's required history. Review the report before forecasting. Supplying another file does not retrain the bundled model or validate it for that source.
 
-The API reports gaps, duplicates, missing values, outliers, coverage, and model/data compatibility. It does not silently repair source data.
+The API metadata, health response, and evaluation manifest identify the bundled sample and recognized copies as `synthetic_data: true` with `data_provenance: "bundled_synthetic"`. Other local files are reported as `synthetic_data: null` and `data_provenance: "caller_supplied_unverified"`. Schema validation does not establish a file's origin: the operator must verify that data is real, suitable, and authorized for use.
 
-## Safe retraining
+## Evaluation and retraining
 
 ```bash
-python -m backend.modeling --train --data /path/to/verified_hourly.csv
+python -m backend.evaluate
 python -m backend.evaluate --manifest
+python -m backend.modeling --train --data /path/to/verified_hourly.csv
 ```
 
-Training refuses the bundled synthetic workbook, preserves candidates, and promotes a model only when it improves WAPE or RMSE on common holdout rows. Keep an unchanged final holdout period when supplying real data.
+The first command runs fixed recursive backtests. `--manifest` refreshes `models/metadata.json` for the configured model and data. Training refuses the bundled workbook and recognized copies. Verify the origin and suitability of any replacement before supplying it with `--data`; accepting its schema does not certify it as real data. The current training procedure requires data spanning the hard-coded pre-2024 training/validation periods and 2024 test period; it preserves candidates and archives the active artifact before a promotion. Promotion requires improved WAPE or RMSE on common holdout rows. Preserve an independent final evaluation period when developing against new data; repeated selection on the same holdout makes that holdout unsuitable as unbiased final evidence.
 
-## Verification
+Only load model artifacts from trusted sources: serialized Python model files can execute code when loaded.
 
-```bash
-python -m pip install -r requirements-dev.txt
-python -m pytest backend/tests -q
+## Repository guide
 
-cd frontend
-npm ci
-npm run check
-```
+| Path | Contents |
+| --- | --- |
+| `backend/` | API, ingestion, features, modeling, evaluation, and Python tests |
+| `frontend/` | React/Vite dashboard and component tests |
+| `data/` | Synthetic demonstration workbook |
+| `models/` | Active artifact, candidates, archive, and lineage metadata |
+| `.github/` | Quality workflow and dependency-update configuration |
+| `figures/`, `scripts/` | Report screenshots and capture automation |
+| `dashboard.py` | Optional legacy Streamlit dashboard |
 
-Current verified result: **21 backend tests and 8 frontend tests pass**, with frontend lint and production build also passing.
-
-## Repository structure
-
-```text
-backend/      FastAPI endpoints, ingestion, features, modeling, and tests
-frontend/     React/Vite dashboard and component tests
-data/         Bundled synthetic workbook
-models/       Active artifact, candidates, archive, and lineage metadata
-figures/      Portfolio and report screenshots
-scripts/      Report-capture automation
-dashboard.py  Optional legacy Streamlit dashboard
-```
-
-## Limitations and responsible use
-
-- Synthetic data cannot establish real-world forecasting performance.
-- Recursive forecasts accumulate error and rely on supplied weather or a historical proxy.
-- Empirical 90% intervals are estimates, not guarantees.
-- The bundled model must be retrained and validated before operational use.
-- Third-party report and data assets retain their respective rights; the MIT license applies to original project software.
-
-## License
-
-Original project software is released under the [MIT License](LICENSE).
+See [CHANGELOG.md](CHANGELOG.md) for documented changes. Original project software uses the [MIT License](LICENSE); third-party report and data assets retain their respective rights.
