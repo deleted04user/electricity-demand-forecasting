@@ -1,0 +1,12 @@
+# Use a small allowlist so local data, credentials, and report artifacts never
+# enter the API build context.
+**
+!Dockerfile
+!requirements-api.lock.txt
+!backend/
+!backend/*.py
+!data/
+!data/electricity_demand_2025.xlsx
+!models/
+!models/electricity_xgb_prediction_model.pkl
+!models/metadata.json
