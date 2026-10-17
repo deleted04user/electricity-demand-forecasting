@@ -57,6 +57,13 @@ data/*.xlsx.bak
 *.tmp
 *.log
 .venv-local/
+.venv-quality/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
 
 # Local browser profiles, test caches, and report-rendering intermediates
 .chrome-report/
