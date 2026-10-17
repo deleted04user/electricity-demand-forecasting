@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
-
+import pytest
 from backend.features import DEMAND_LAGS, ROLLING_WINDOWS, add_engineered_features
 from backend.modeling import (
     CANDIDATES,
@@ -32,16 +32,20 @@ class CausalFeatureTests(unittest.TestCase):
         for lag in DEMAND_LAGS:
             self.assertEqual(row[f"demand_lag_{lag}h"], self.frame["Demand"].iloc[350 - lag])
         for window in ROLLING_WINDOWS:
-            expected = self.frame["Demand"].iloc[350 - window:350]
+            expected = self.frame["Demand"].iloc[350 - window : 350]
             self.assertAlmostEqual(row[f"demand_rolling_mean_{window}h"], expected.mean())
             self.assertAlmostEqual(row[f"demand_rolling_std_{window}h"], expected.std())
 
         changed = self.frame.copy()
-        changed.loc[self.index[350]:, "Demand"] = 999999.0
+        changed.loc[self.index[350] :, "Demand"] = 999999.0
         changed_features = add_engineered_features(changed, holiday_dates=set())
         causal_columns = [
             *(f"demand_lag_{lag}h" for lag in DEMAND_LAGS),
-            *(f"demand_rolling_{stat}_{window}h" for window in ROLLING_WINDOWS for stat in ("mean", "std")),
+            *(
+                f"demand_rolling_{stat}_{window}h"
+                for window in ROLLING_WINDOWS
+                for stat in ("mean", "std")
+            ),
         ]
         pd.testing.assert_series_equal(
             engineered.loc[self.index[350], causal_columns],
@@ -55,7 +59,9 @@ class CausalFeatureTests(unittest.TestCase):
         engineered = add_engineered_features(frame, holiday_dates=set())
         self.assertTrue(pd.isna(engineered.loc[self.index[0], "Temperature"]))
         self.assertTrue(pd.isna(engineered.loc[self.index[1], "Temperature"]))
-        self.assertEqual(engineered.loc[self.index[10], "Temperature"], frame.loc[self.index[9], "Temperature"])
+        self.assertEqual(
+            engineered.loc[self.index[10], "Temperature"], frame.loc[self.index[9], "Temperature"]
+        )
 
 
 class EvaluationTests(unittest.TestCase):
@@ -81,6 +87,22 @@ class EvaluationTests(unittest.TestCase):
         self.assertAlmostEqual(metrics["r2"], 0.9)
         self.assertAlmostEqual(metrics["wape"], 10.0)
         self.assertAlmostEqual(metrics["bias"], 5.0)
+
+
+@pytest.mark.parametrize(
+    "index,message",
+    [
+        (pd.DatetimeIndex([]), "non-empty"),
+        (pd.DatetimeIndex([pd.NaT]), "valid hourly"),
+        (pd.DatetimeIndex(["2024-01-01 00:15"]), "hourly boundaries"),
+        (pd.date_range("2024-01-01", periods=2, freq="h", tz="UTC"), "naive local"),
+        (pd.DatetimeIndex(["2024-01-01", "2024-01-01"]), "Duplicate"),
+    ],
+)
+def test_features_reject_timestamps_that_cannot_preserve_hourly_lags(index, message):
+    frame = pd.DataFrame({"Demand": 100.0, "Temperature": 20.0, "Humidity": 50.0}, index=index)
+    with pytest.raises(ValueError, match=message):
+        add_engineered_features(frame, holiday_dates=set())
 
 
 if __name__ == "__main__":

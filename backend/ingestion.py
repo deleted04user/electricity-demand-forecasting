@@ -7,10 +7,15 @@ Humidity.  Timestamp must be an unambiguous hourly local time (configured by
 ``ELECTRICITY_TIMEZONE``; default Africa/Casablanca).  Inputs may be naive local
 timestamps or timezone-aware timestamps, but not a mixture.
 """
+
 from __future__ import annotations
 
+import hashlib
 import os
+from collections.abc import Collection
 from pathlib import Path
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -21,12 +26,77 @@ def configured_data_path(default: Path) -> Path:
     return Path(os.getenv("ELECTRICITY_DATA_PATH", str(default))).expanduser()
 
 
+def data_provenance(path: Path, bundled_path: Path) -> dict[str, bool | str | None]:
+    """Identify the known synthetic sample; other local files remain unverified."""
+    bundled = path.resolve() == bundled_path.resolve()
+    if not bundled and bundled_path.is_file():
+        bundled = (
+            hashlib.sha256(path.read_bytes()).digest()
+            == hashlib.sha256(bundled_path.read_bytes()).digest()
+        )
+    return {
+        "synthetic_data": True if bundled else None,
+        "data_provenance": "bundled_synthetic" if bundled else "caller_supplied_unverified",
+    }
+
+
 def _read(path: Path) -> pd.DataFrame:
     if path.suffix.lower() == ".csv":
         return pd.read_csv(path)
     if path.suffix.lower() in {".xlsx", ".xls"}:
         return pd.read_excel(path)
     raise ValueError("Data input must be a .csv, .xlsx, or .xls file")
+
+
+def _hourly_timestamps(values: pd.Series) -> pd.DatetimeIndex:
+    """Normalize a single timezone contract without dropping off-grid observations."""
+    if values.empty:
+        raise ValueError("Data input must contain at least one hourly observation")
+    stamps = []
+    for value in values:
+        try:
+            if isinstance(value, (int, float, np.number)):
+                raise ValueError("numeric timestamps are ambiguous")
+            stamp = pd.Timestamp(value)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Timestamp contains invalid values") from exc
+        if pd.isna(stamp):
+            raise ValueError("Timestamp contains invalid values")
+        stamps.append(stamp)
+    aware = [stamp.tzinfo is not None for stamp in stamps]
+    if any(aware) and not all(aware):
+        raise ValueError("Timestamp must not mix timezone-aware and naive values")
+    if all(aware):
+        try:
+            index = (
+                pd.to_datetime(stamps, utc=True)
+                .tz_convert(os.getenv("ELECTRICITY_TIMEZONE", "Africa/Casablanca"))
+                .tz_localize(None)
+            )
+        except (KeyError, ValueError) as exc:
+            raise ValueError("Invalid ELECTRICITY_TIMEZONE configuration") from exc
+    else:
+        index = pd.DatetimeIndex(stamps)
+    if (index != index.floor("h")).any():
+        raise ValueError("Timestamp values must fall on exact hourly boundaries")
+    if index.has_duplicates:
+        raise ValueError("Duplicate hourly timestamps after local timezone conversion")
+    return index
+
+
+def _numeric_columns(data: pd.DataFrame, columns: tuple[str, ...]) -> None:
+    """Allow explicitly missing observations, but reject malformed or infinite values."""
+    for column in columns:
+        converted = pd.to_numeric(data[column], errors="coerce")
+        if (data[column].notna() & converted.isna()).any():
+            raise ValueError(f"{column} contains non-numeric values")
+        if not np.isfinite(converted.dropna()).all():
+            raise ValueError(f"{column} must contain finite values")
+        data[column] = converted
+    if "Demand" in data and (data["Demand"] < 0).any():
+        raise ValueError("Demand must be non-negative")
+    if "Humidity" in data and ((data["Humidity"] < 0) | (data["Humidity"] > 100)).any():
+        raise ValueError("Humidity must be between 0 and 100 percent")
 
 
 def load_hourly_data(path: Path) -> pd.DataFrame:
@@ -37,67 +107,89 @@ def load_hourly_data(path: Path) -> pd.DataFrame:
     if missing:
         raise ValueError(f"Missing required columns: {', '.join(missing)}")
     data = raw.loc[:, list(REQUIRED_COLUMNS)].copy()
-    data["Timestamp"] = pd.to_datetime(data["Timestamp"], errors="coerce")
-    if data["Timestamp"].isna().any():
-        raise ValueError("Timestamp contains invalid values")
-    # Convert aware source timestamps to configured local clock time, then retain
-    # naive local timestamps for the model's established artifact contract.
-    if getattr(data["Timestamp"].dt, "tz", None) is not None:
-        data["Timestamp"] = data["Timestamp"].dt.tz_convert(os.getenv("ELECTRICITY_TIMEZONE", "Africa/Casablanca")).dt.tz_localize(None)
-    for column in ("Demand", "Temperature", "Humidity"):
-        data[column] = pd.to_numeric(data[column], errors="coerce")
+    data["Timestamp"] = _hourly_timestamps(data["Timestamp"])
+    _numeric_columns(data, ("Demand", "Temperature", "Humidity"))
     return data.set_index("Timestamp").sort_index()
 
 
-def data_quality(frame: pd.DataFrame, *, model_features=()) -> dict:
+def data_quality(frame: pd.DataFrame, *, model_features: Collection[str] = ()) -> dict[str, Any]:
     """Return transparent, non-mutating data checks; no values are imputed."""
-    index = frame.index
+    index = pd.DatetimeIndex(frame.index)
     duplicates = int(index.duplicated().sum())
     unique = index[~index.duplicated()]
-    expected = pd.date_range(unique.min(), unique.max(), freq="h") if len(unique) else pd.DatetimeIndex([])
+    expected = (
+        pd.date_range(unique.min(), unique.max(), freq="h") if len(unique) else pd.DatetimeIndex([])
+    )
     gaps = expected.difference(unique)
-    numeric = frame[[c for c in ("Demand", "Temperature", "Humidity") if c in frame]].copy()
+    columns = [c for c in ("Demand", "Temperature", "Humidity") if c in frame]
+    numeric = frame[columns].copy()
     outliers = {}
-    for column in numeric:
-        values = numeric[column].dropna()
+    for column in columns:
+        values = numeric[column].replace([np.inf, -np.inf], np.nan).dropna()
         if values.empty:
             outliers[column] = 0
             continue
-        q1, q3 = values.quantile([.25, .75])
+        q1, q3 = values.quantile([0.25, 0.75])
         iqr = q3 - q1
-        outliers[column] = int(((values < q1 - 3 * iqr) | (values > q3 + 3 * iqr)).sum()) if iqr else 0
-    missing = {column.lower(): int(frame[column].isna().sum()) for column in numeric}
+        outliers[column] = (
+            int(((values < q1 - 3 * iqr) | (values > q3 + 3 * iqr)).sum()) if iqr else 0
+        )
+    missing = {column.lower(): int(frame[column].isna().sum()) for column in columns}
     required_history = 0
     from .features import required_history_hours
+
     required_history = required_history_hours(model_features) if model_features else 0
-    compatible = (duplicates == 0 and len(gaps) == 0 and all(v == 0 for v in missing.values())
-                  and len(frame) > required_history)
+    invalid = {
+        column.lower(): int((numeric[column].notna() & ~np.isfinite(numeric[column])).sum())
+        for column in columns
+    }
+    off_hour = int((index != index.floor("h")).sum())
+    compatible = (
+        set(numeric.columns) == {"Demand", "Temperature", "Humidity"}
+        and duplicates == 0
+        and off_hour == 0
+        and len(gaps) == 0
+        and all(v == 0 for v in missing.values())
+        and all(v == 0 for v in invalid.values())
+        and len(frame) > required_history
+    )
     return {
         "status": "ready" if compatible else "attention_required",
         "rows": int(len(frame)),
-        "date_coverage": {"start": str(unique.min()) if len(unique) else None, "end": str(unique.max()) if len(unique) else None},
-        "duplicates": duplicates, "hourly_gaps": int(len(gaps)),
+        "date_coverage": {
+            "start": str(unique.min()) if len(unique) else None,
+            "end": str(unique.max()) if len(unique) else None,
+        },
+        "duplicates": duplicates,
+        "hourly_gaps": int(len(gaps)),
         "first_gap": str(gaps[0]) if len(gaps) else None,
-        "missing": missing, "outliers_iqr_3x": outliers,
+        "missing": missing,
+        "non_finite": invalid,
+        "off_hour_timestamps": off_hour,
+        "outliers_iqr_3x": outliers,
         "model_data_compatible": compatible,
         "required_history_hours": required_history,
         "rules": "No duplicate timestamps or gaps; demand/weather must be present for model-compatible rows. Outliers are flagged, not removed.",
     }
 
 
-def load_configured_weather(path_value: str | None, start: pd.Timestamp, horizon: int):
+def load_configured_weather(
+    path_value: str | None, start: pd.Timestamp, horizon: int
+) -> pd.DataFrame | None:
     """Read a credential-free locally supplied weather forecast file if configured."""
     if not path_value:
         return None
-    path = Path(path_value)
-    weather = _read(path)
+    path = Path(path_value).expanduser()
+    try:
+        weather = _read(path).dropna(how="all")
+    except OSError as exc:
+        raise ValueError("Configured weather forecast file could not be read") from exc
     missing = sorted({"Timestamp", "Temperature", "Humidity"}.difference(weather.columns))
     if missing:
         raise ValueError(f"Weather forecast is missing required columns: {', '.join(missing)}")
     weather = weather[["Timestamp", "Temperature", "Humidity"]].copy()
-    weather["Timestamp"] = pd.to_datetime(weather["Timestamp"], errors="coerce")
-    weather["Temperature"] = pd.to_numeric(weather["Temperature"], errors="coerce")
-    weather["Humidity"] = pd.to_numeric(weather["Humidity"], errors="coerce")
+    weather["Timestamp"] = _hourly_timestamps(weather["Timestamp"])
+    _numeric_columns(weather, ("Temperature", "Humidity"))
     weather = weather.set_index("Timestamp").sort_index()
     future = weather.reindex(pd.date_range(start, periods=horizon, freq="h"))
     if future[["Temperature", "Humidity"]].isna().any().any():

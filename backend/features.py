@@ -3,35 +3,55 @@
 All demand-derived features use observations strictly before the feature row.
 Weather is forward-filled only; leading missing weather remains unavailable.
 """
+
 from __future__ import annotations
 
+from collections.abc import Collection
 from functools import lru_cache
-from typing import Collection
 
 import numpy as np
 import pandas as pd
-
-try:
-    from holidays import country_holidays
-except ImportError:  # Lets dependency-light unit tests inject an empty holiday set.
-    country_holidays = None
-
 
 DEMAND_LAGS = (1, 2, 3, 6, 12, 24, 48, 72, 168, 336)
 ROLLING_WINDOWS = (6, 24, 168)
 
 # Exact schema used by the currently packaged model.
 LEGACY_FEATURES = (
-    "hour", "dayofweek", "month", "year", "dayofyear", "quarter", "weekofyear",
-    "Temperature", "Humidity", "is_holiday", "is_weekend", "Demand_lag_24hr",
-    "demand_lag_168hr", "demand_rolling_mean_24hr", "demand_rolling_std_24hr",
+    "hour",
+    "dayofweek",
+    "month",
+    "year",
+    "dayofyear",
+    "quarter",
+    "weekofyear",
+    "Temperature",
+    "Humidity",
+    "is_holiday",
+    "is_weekend",
+    "Demand_lag_24hr",
+    "demand_lag_168hr",
+    "demand_rolling_mean_24hr",
+    "demand_rolling_std_24hr",
 )
 
 # Feature order is part of the candidate model contract and is stored in its package.
 IMPROVED_FEATURES = (
-    "hour", "dayofweek", "month", "year", "dayofyear", "quarter", "weekofyear",
-    "hour_sin", "hour_cos", "dayofweek_sin", "dayofweek_cos", "is_weekend",
-    "is_holiday", "Temperature", "Humidity", "temperature_squared",
+    "hour",
+    "dayofweek",
+    "month",
+    "year",
+    "dayofyear",
+    "quarter",
+    "weekofyear",
+    "hour_sin",
+    "hour_cos",
+    "dayofweek_sin",
+    "dayofweek_cos",
+    "is_weekend",
+    "is_holiday",
+    "Temperature",
+    "Humidity",
+    "temperature_squared",
     *(f"demand_lag_{lag}h" for lag in DEMAND_LAGS),
     *(f"demand_rolling_{stat}_{window}h" for window in ROLLING_WINDOWS for stat in ("mean", "std")),
 )
@@ -39,8 +59,12 @@ IMPROVED_FEATURES = (
 
 @lru_cache(maxsize=16)
 def _morocco_holiday_dates(years: tuple[int, ...]) -> frozenset:
-    if country_holidays is None:
-        raise RuntimeError("The 'holidays' package is required when holiday_dates is not supplied")
+    try:
+        from holidays import country_holidays
+    except ImportError as exc:
+        raise RuntimeError(
+            "The 'holidays' package is required when holiday_dates is not supplied"
+        ) from exc
     return frozenset(country_holidays("MA", years=years).keys())
 
 
@@ -63,6 +87,12 @@ def add_engineered_features(
         data = data.set_index("Timestamp")
     if not isinstance(data.index, pd.DatetimeIndex):
         raise TypeError("Feature engineering requires a DatetimeIndex or Timestamp column")
+    if data.empty or data.index.hasnans:
+        raise ValueError("Feature engineering requires non-empty valid hourly timestamps")
+    if data.index.tz is not None:
+        raise ValueError("Feature engineering requires naive local hourly timestamps")
+    if (data.index != data.index.floor("h")).any():
+        raise ValueError("Timestamp values must fall on exact hourly boundaries")
 
     data = data.sort_index()
     if data.index.has_duplicates:
@@ -80,14 +110,15 @@ def add_engineered_features(
     # Demand targets remain missing. Carry-forward is confined to historical inputs.
     demand_history = data["Demand"].ffill()
 
-    data["hour"] = data.index.hour
-    data["dayofweek"] = data.index.dayofweek
-    data["month"] = data.index.month
-    data["year"] = data.index.year
-    data["dayofyear"] = data.index.dayofyear
-    data["quarter"] = data.index.quarter
-    data["weekofyear"] = data.index.isocalendar().week.astype(int)
-    data["is_weekend"] = data.index.dayofweek.isin([5, 6]).astype("int32")
+    calendar_index = pd.DatetimeIndex(data.index)
+    data["hour"] = calendar_index.hour
+    data["dayofweek"] = calendar_index.dayofweek
+    data["month"] = calendar_index.month
+    data["year"] = calendar_index.year
+    data["dayofyear"] = calendar_index.dayofyear
+    data["quarter"] = calendar_index.quarter
+    data["weekofyear"] = calendar_index.isocalendar().week.astype(int)
+    data["is_weekend"] = calendar_index.dayofweek.isin([5, 6]).astype("int32")
 
     hour_angle = 2 * np.pi * data["hour"] / 24.0
     weekday_angle = 2 * np.pi * data["dayofweek"] / 7.0
@@ -97,10 +128,12 @@ def add_engineered_features(
     data["dayofweek_cos"] = np.cos(weekday_angle)
 
     if holiday_dates is None:
-        years = tuple(range(data.index.min().year, data.index.max().year + 1))
+        years = tuple(range(calendar_index.min().year, calendar_index.max().year + 1))
         holiday_dates = _morocco_holiday_dates(years)
     holiday_dates = set(holiday_dates)
-    data["is_holiday"] = data.index.map(lambda stamp: int(stamp.date() in holiday_dates)).astype("int32")
+    data["is_holiday"] = calendar_index.map(
+        lambda stamp: int(stamp.date() in holiday_dates)
+    ).astype("int32")
 
     data["temperature_squared"] = data["Temperature"] ** 2
 
