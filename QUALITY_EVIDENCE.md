@@ -39,7 +39,7 @@ The study is explicitly synthetic research. The served artifact is protected fro
 
 ## External assessment
 
-A fresh public-copy DataFactor assessment on 18 October 2026 returned **80 overall (B)**, compared with the previously supplied 62.7. It recognized the tested service, bounded experiments, MLflow, strict checks and browser integration. It still missed the existing Compose file and Python lock inputs in some structural statistics; standard package metadata, complete environment documentation and the conventional Compose filename address the useful follow-up findings.
+A fresh public-copy DataFactor assessment on 18 October 2026 returned **79.5 overall (B)**, an increase of 16.8 points from the previously supplied 62.7. The website displayed the rounded value **80**; the emailed report supplied the precise score. It recognized the tested service, bounded experiments, MLflow, strict checks and browser integration. It still missed the existing Compose file and Python lock inputs in some structural statistics; standard package metadata, complete environment documentation and the conventional Compose filename address the useful follow-up findings.
 
 [Release v0.2.0](https://github.com/deleted04user/electricity-demand-forecasting/releases/tag/v0.2.0) and [its final five-job Quality run](https://github.com/deleted04user/electricity-demand-forecasting/actions/runs/39100290251) preserve that engineering baseline. The external report does not expose an analyzed SHA, so match its scan time and evidence against the submitted revision before attributing a later score. Scores and licensing estimates are separate from executable CI evidence.
 
