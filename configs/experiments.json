@@ -1,0 +1,32 @@
+{
+  "protocol_version": 1,
+  "dataset": "bundled_synthetic",
+  "purpose": "research_only_no_promotion",
+  "folds": ["2023_jan_apr", "2023_may_aug", "2023_sep_dec"],
+  "variants": ["lags", "lags_weather", "lags_calendar", "lags_rolling", "full"],
+  "initial_seed": 42,
+  "repeat_variants": ["lags", "full"],
+  "repeat_seeds": [43, 44],
+  "metrics": ["mae", "rmse", "r2", "wape", "bias"],
+  "selection": "seed42_mean_fold_wape_then_rmse",
+  "weather": "previous_observed_hour",
+  "parameters": {
+    "n_estimators": 120,
+    "learning_rate": 0.06,
+    "max_depth": 4,
+    "min_child_weight": 5,
+    "subsample": 0.85,
+    "colsample_bytree": 0.85,
+    "reg_alpha": 0.1,
+    "reg_lambda": 3.0
+  },
+  "budget": {"max_fits": 28, "max_seconds": 300, "threads": 2},
+  "historical_diagnostics": {
+    "start": "2024-01-01",
+    "end": "2024-12-31 23:00:00",
+    "origin_days": [1],
+    "horizons": [1, 6, 24, 72, 168],
+    "nominal_coverage": 0.9,
+    "interval_rule": "2023_oof_absolute_residual_q90_times_sqrt_horizon"
+  }
+}

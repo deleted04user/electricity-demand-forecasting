@@ -1,0 +1,63 @@
+{
+  "status": "passed",
+  "method": "independent stdlib JSON/csv/math counts; no pandas aggregation",
+  "runs": [
+    {
+      "path": "experiments/reports/bounded_synthetic_20261018_v2",
+      "run_id": "20261018T051314Z_2971f243",
+      "report_sha256": "ceea726cac284ad8f63786ede94d43ec5197e994e12e094340fc3f33835beaee"
+    },
+    {
+      "path": "experiments/reports/bounded_synthetic_20261018_v2_repeat",
+      "run_id": "20261018T051426Z_f8fd9fe2",
+      "report_sha256": "984b7e00b2e3eb071465c9fce8a2b1abad6c76655315b523ddfb2a73704be440"
+    }
+  ],
+  "source_manifest_sha256": "b34e0516e6ae893c783e4e962cf25ca2bada459951887a81a6dec2202643d8f3",
+  "tolerance_absolute": 0.0001,
+  "maximum_metric_difference": 0.0,
+  "independent_interval_counts": [
+    {
+      "horizon_hours": 1,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 6,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 24,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 72,
+      "covered": 11,
+      "scored_origins": 11,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 168,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    }
+  ],
+  "common_fold_timestamp_checks": "passed",
+  "segment_partition_counts": "passed",
+  "active_artifact_unchanged": true,
+  "mlflow_local_database_finished_runs": [
+    33,
+    33
+  ]
+}

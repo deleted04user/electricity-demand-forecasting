@@ -1,0 +1,5 @@
+# Optional local experiment tracking; serving never imports MLflow.
+-r requirements-dev.txt
+mlflow-skinny>=3.4,<4
+sqlalchemy>=2,<3
+alembic>=1.14,<2
