@@ -23,7 +23,7 @@ npm run check
 
 This runs Oxlint, Vitest component tests, and the Vite production build. Individual commands are `npm run lint`, `npm test`, and `npm run build`. Tests use Testing Library and jsdom. Build output is written to `dist/`.
 
-`npm run preview` serves the build for local inspection. For deployment, use the repository's [Docker Compose setup](../compose.yaml), or serve `dist/` with an `/api` reverse proxy. If using a separate API origin, set `VITE_API_BASE_URL` before building.
+`npm run preview` serves the build for local inspection. For deployment, use the repository's [Docker Compose setup](../docker-compose.yml), or serve `dist/` with an `/api` reverse proxy. If using a separate API origin, set `VITE_API_BASE_URL` before building.
 
 Use `npm ci` to install exactly the committed lock file. Commit `package-lock.json` together with intentional dependency changes; run the complete check after updating it.
 
