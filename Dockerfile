@@ -18,6 +18,7 @@ RUN pip install --no-cache-dir --require-hashes -r requirements-api.lock.txt
 COPY backend/ ./backend/
 COPY data/electricity_demand_2025.xlsx ./data/electricity_demand_2025.xlsx
 COPY models/electricity_xgb_prediction_model.pkl models/metadata.json ./models/
+COPY models/artifact-manifest.json models/diagnostics.json ./models/
 
 USER app
 EXPOSE 8000

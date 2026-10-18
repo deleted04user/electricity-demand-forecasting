@@ -1,5 +1,6 @@
 import json
 import logging
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
@@ -7,12 +8,22 @@ import pytest
 from backend import main
 from backend.features import add_engineered_features
 from backend.logging_config import JsonFormatter, logger
+from backend.service import ForecastError
 from fastapi.testclient import TestClient
 
-client = TestClient(main.app)
+
+@pytest.fixture(scope="module")
+def client():
+    with TestClient(main.create_app()) as active:
+        yield active
 
 
-def test_health_overview_meta():
+@pytest.fixture
+def service(client):
+    return client.app.state.runtime.service
+
+
+def test_health_overview_meta(client):
     assert client.get("/api/health").json()["model_ready"]
     assert client.get("/api/overview").json()["total_observations"] > 0
     analysis = client.get("/api/demand-analysis")
@@ -23,7 +34,7 @@ def test_health_overview_meta():
     assert "data_quality" in meta and "model_data_compatible" in meta["data_quality"]
 
 
-def test_historical():
+def test_historical(client):
     response = client.get("/api/forecast", params={"date": "2024-12-31", "hour": 12})
     assert response.status_code == 200
     assert response.json()["prediction_interval"]["not_a_guarantee"] is True
@@ -36,7 +47,7 @@ def test_historical():
         assert client.get("/api/forecast", params={"date": date, "hour": hour}).status_code == code
 
 
-def test_future():
+def test_future(client):
     payload = {"start": "2025-01-01T00:00:00", "horizon": 25}
     response = client.post("/api/forecast/future", json=payload)
     assert response.status_code == 200
@@ -62,7 +73,7 @@ def test_future():
         {"temperature": [20, 20], "humidity": [101, 50]},
     ],
 )
-def test_future_validation(change):
+def test_future_validation(client, change):
     response = client.post(
         "/api/forecast/future", json={"start": "2025-01-01", "horizon": 2, **change}
     )
@@ -100,19 +111,19 @@ def test_causal_features():
     assert pd.isna(original.iloc[0]["Demand_lag_24hr"])
 
 
-def test_recursive_predictions_feed_history(monkeypatch):
+def test_recursive_predictions_feed_history(service, monkeypatch):
     class LagModel:
         def predict(self, features):
             column = "demand_lag_24h" if "demand_lag_24h" in features else "Demand_lag_24hr"
             return features[column].to_numpy() + 1
 
-    monkeypatch.setattr(main, "MODEL", LagModel())
+    monkeypatch.setattr(service, "model", LagModel())
     start = pd.Timestamp("2025-01-01")
-    rows = main.recursive_forecast(main.DATA, start, 25)
+    rows = service.recursive_forecast(service.data, start, 25)
     assert rows[24]["predicted"] == pytest.approx(rows[0]["predicted"] + 1, abs=0.01)
 
 
-def test_baselines_and_split():
+def test_baselines_and_split(client):
     body = client.get("/api/model-performance").json()
     assert set(body["baselines"]) == {"24-hour naive", "168-hour naive"}
     assert body["early_stopping_period"]["start"].startswith("2023")
@@ -124,7 +135,7 @@ def test_baselines_and_split():
 @pytest.mark.parametrize(
     "date", ["2024-12-31 12:00", "2024-12-31T00:00:00Z", "20241231", "2024-W52-2"]
 )
-def test_historical_rejects_dates_with_hidden_time_or_noncanonical_format(date):
+def test_historical_rejects_dates_with_hidden_time_or_noncanonical_format(client, date):
     response = client.get("/api/forecast", params={"date": date, "hour": 12})
     assert response.status_code == 400
 
@@ -138,16 +149,18 @@ def test_historical_rejects_dates_with_hidden_time_or_noncanonical_format(date):
         {"temperature": [20, 20], "humidity": ["Infinity", 50]},
     ],
 )
-def test_future_rejects_nonfinite_and_ambiguous_payloads(change):
+def test_future_rejects_nonfinite_and_ambiguous_payloads(client, change):
     response = client.post(
         "/api/forecast/future", json={"start": "2025-01-01", "horizon": 2, **change}
     )
     assert response.status_code == 422
 
 
-def test_future_uses_configured_weather_and_returns_configuration_errors(tmp_path, monkeypatch):
+def test_future_uses_configured_weather_and_returns_configuration_errors(
+    client, service, tmp_path, monkeypatch
+):
     path = tmp_path / "weather.csv"
-    monkeypatch.setenv("WEATHER_FORECAST_PATH", str(path))
+    monkeypatch.setattr(service, "settings", replace(service.settings, weather_path=str(path)))
     payload = {"start": "2025-01-01", "horizon": 2}
     response = client.post("/api/forecast/future", json=payload)
     assert response.status_code == 400
@@ -164,21 +177,23 @@ def test_future_uses_configured_weather_and_returns_configuration_errors(tmp_pat
     assert response.json()["weather_source"] == "configured_local_forecast"
 
 
-def test_demand_analysis_keeps_json_valid_when_targets_are_missing(monkeypatch):
-    data = main.DATA.copy()
+def test_demand_analysis_keeps_json_valid_when_targets_are_missing(client, service, monkeypatch):
+    data = service.data.copy()
     data.loc[data.index[100:120], "Demand"] = np.nan
-    monkeypatch.setattr(main, "DATA", data)
+    monkeypatch.setattr(service, "data", data)
     response = client.get("/api/demand-analysis")
     assert response.status_code == 200
     assert all(np.isfinite(row["demand"]) for row in response.json()["temp_vs_demand_sample"])
 
 
-def test_recursive_forecast_reports_insufficient_history():
-    with pytest.raises(main.HTTPException, match="causal demand history"):
-        main.recursive_forecast(main.DATA.iloc[:1], pd.Timestamp("2025-01-01"), 1)
+def test_recursive_forecast_reports_insufficient_history(service):
+    with pytest.raises(ForecastError, match="causal demand history"):
+        service.recursive_forecast(service.data.iloc[:1], pd.Timestamp("2025-01-01"), 1)
 
 
-def test_request_logs_and_response_share_request_id_without_query_values(caplog, monkeypatch):
+def test_request_logs_and_response_share_request_id_without_query_values(
+    client, caplog, monkeypatch
+):
     monkeypatch.setattr(logger, "propagate", True)
     with caplog.at_level(logging.INFO, logger="electricity.api"):
         response = client.get("/api/health?token=private-value")
@@ -190,12 +205,12 @@ def test_request_logs_and_response_share_request_id_without_query_values(caplog,
     assert "private-value" not in json.dumps(payload)
 
 
-def test_unexpected_failure_is_logged_and_returns_safe_json(monkeypatch, caplog):
+def test_unexpected_failure_is_logged_and_returns_safe_json(client, service, monkeypatch, caplog):
     class BrokenModel:
         def predict(self, features):
             raise RuntimeError("private implementation detail")
 
-    monkeypatch.setattr(main, "MODEL", BrokenModel())
+    monkeypatch.setattr(service, "model", BrokenModel())
     monkeypatch.setattr(logger, "propagate", True)
     with caplog.at_level(logging.INFO, logger="electricity.api"):
         response = client.get("/api/forecast", params={"date": "2024-12-31", "hour": 12})

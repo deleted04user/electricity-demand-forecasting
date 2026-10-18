@@ -18,11 +18,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
 from numpy.typing import ArrayLike
 
+from .artifacts import publish_model_manifest
 from .features import IMPROVED_FEATURES, LEGACY_FEATURES, add_engineered_features
 from .ingestion import data_provenance, load_hourly_data
 
@@ -191,6 +193,8 @@ def calculate_metrics(actual: ArrayLike, predicted: ArrayLike) -> dict[str, floa
     predicted_array = np.asarray(predicted, dtype=float)
     if actual_array.shape != predicted_array.shape or actual_array.size == 0:
         raise ValueError("actual and predicted must be non-empty arrays with identical shapes")
+    if actual_array.ndim != 1:
+        raise ValueError("metrics require one-dimensional actual and predicted arrays")
     if not (np.isfinite(actual_array).all() and np.isfinite(predicted_array).all()):
         raise ValueError("metrics require finite values")
     error = predicted_array - actual_array
@@ -386,7 +390,7 @@ def run_training(data_path: Path | None = None) -> dict[str, Any]:
         data.loc[:"2023-12-31 23:00:00"], winner.features
     ).index.min()
 
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "_" + uuid4().hex[:12]
     candidate_dir = ROOT / "models/candidates"
     candidate_dir.mkdir(parents=True, exist_ok=True)
     candidate_path = candidate_dir / f"electricity_xgb_candidate_{timestamp}.pkl"
@@ -421,7 +425,17 @@ def run_training(data_path: Path | None = None) -> dict[str, Any]:
         shutil.copy2(ACTIVE_MODEL_PATH, backup_path)
         temporary_active = ACTIVE_MODEL_PATH.with_name(ACTIVE_MODEL_PATH.name + ".tmp")
         shutil.copy2(candidate_path, temporary_active)
-        os.replace(temporary_active, ACTIVE_MODEL_PATH)
+        try:
+            os.replace(temporary_active, ACTIVE_MODEL_PATH)
+            publish_model_manifest(
+                ACTIVE_MODEL_PATH, ROOT / "models/artifact-manifest.json", list(winner.features)
+            )
+        except Exception:
+            # A model and its trusted manifest form one serving contract. If
+            # publishing either fails, keep the previous working artifact active.
+            shutil.copy2(backup_path, temporary_active)
+            os.replace(temporary_active, ACTIVE_MODEL_PATH)
+            raise
 
     report = {
         "outcome": "improved_model_deployed" if improved else "candidate_retained",

@@ -10,3 +10,5 @@
 !models/
 !models/electricity_xgb_prediction_model.pkl
 !models/metadata.json
+!models/artifact-manifest.json
+!models/diagnostics.json

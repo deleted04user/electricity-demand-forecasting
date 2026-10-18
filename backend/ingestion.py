@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import os
 from collections.abc import Collection
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -48,7 +49,7 @@ def _read(path: Path) -> pd.DataFrame:
     raise ValueError("Data input must be a .csv, .xlsx, or .xls file")
 
 
-def _hourly_timestamps(values: pd.Series) -> pd.DatetimeIndex:
+def _hourly_timestamps(values: pd.Series, *, timezone: str | None = None) -> pd.DatetimeIndex:
     """Normalize a single timezone contract without dropping off-grid observations."""
     if values.empty:
         raise ValueError("Data input must contain at least one hourly observation")
@@ -70,7 +71,7 @@ def _hourly_timestamps(values: pd.Series) -> pd.DatetimeIndex:
         try:
             index = (
                 pd.to_datetime(stamps, utc=True)
-                .tz_convert(os.getenv("ELECTRICITY_TIMEZONE", "Africa/Casablanca"))
+                .tz_convert(timezone or os.getenv("ELECTRICITY_TIMEZONE", "Africa/Casablanca"))
                 .tz_localize(None)
             )
         except (KeyError, ValueError) as exc:
@@ -99,7 +100,7 @@ def _numeric_columns(data: pd.DataFrame, columns: tuple[str, ...]) -> None:
         raise ValueError("Humidity must be between 0 and 100 percent")
 
 
-def load_hourly_data(path: Path) -> pd.DataFrame:
+def load_hourly_data(path: Path, *, timezone: str | None = None) -> pd.DataFrame:
     if not path.is_file():
         raise FileNotFoundError(f"Configured data file does not exist: {path}")
     raw = _read(path).dropna(how="all")
@@ -107,7 +108,7 @@ def load_hourly_data(path: Path) -> pd.DataFrame:
     if missing:
         raise ValueError(f"Missing required columns: {', '.join(missing)}")
     data = raw.loc[:, list(REQUIRED_COLUMNS)].copy()
-    data["Timestamp"] = _hourly_timestamps(data["Timestamp"])
+    data["Timestamp"] = _hourly_timestamps(data["Timestamp"], timezone=timezone)
     _numeric_columns(data, ("Demand", "Temperature", "Humidity"))
     return data.set_index("Timestamp").sort_index()
 
@@ -174,7 +175,7 @@ def data_quality(frame: pd.DataFrame, *, model_features: Collection[str] = ()) -
 
 
 def load_configured_weather(
-    path_value: str | None, start: pd.Timestamp, horizon: int
+    path_value: str | None, start: pd.Timestamp, horizon: int, *, timezone: str | None = None
 ) -> pd.DataFrame | None:
     """Read a credential-free locally supplied weather forecast file if configured."""
     if not path_value:
@@ -188,7 +189,7 @@ def load_configured_weather(
     if missing:
         raise ValueError(f"Weather forecast is missing required columns: {', '.join(missing)}")
     weather = weather[["Timestamp", "Temperature", "Humidity"]].copy()
-    weather["Timestamp"] = _hourly_timestamps(weather["Timestamp"])
+    weather["Timestamp"] = _hourly_timestamps(weather["Timestamp"], timezone=timezone)
     _numeric_columns(weather, ("Temperature", "Humidity"))
     weather = weather.set_index("Timestamp").sort_index()
     future = weather.reindex(pd.date_range(start, periods=horizon, freq="h"))
@@ -197,7 +198,7 @@ def load_configured_weather(
     return future
 
 
-def verified_event_dates(path_value: str | None) -> set:
+def verified_event_dates(path_value: str | None) -> set[date]:
     """Load explicitly maintained event dates; missing configuration means no added events."""
     if not path_value:
         return set()

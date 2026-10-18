@@ -7,6 +7,7 @@ Weather is forward-filled only; leading missing weather remains unavailable.
 from __future__ import annotations
 
 from collections.abc import Collection
+from datetime import date
 from functools import lru_cache
 
 import numpy as np
@@ -58,7 +59,7 @@ IMPROVED_FEATURES = (
 
 
 @lru_cache(maxsize=16)
-def _morocco_holiday_dates(years: tuple[int, ...]) -> frozenset:
+def _morocco_holiday_dates(years: tuple[int, ...]) -> frozenset[date]:
     try:
         from holidays import country_holidays
     except ImportError as exc:
@@ -71,7 +72,7 @@ def _morocco_holiday_dates(years: tuple[int, ...]) -> frozenset:
 def add_engineered_features(
     df: pd.DataFrame,
     *,
-    holiday_dates: Collection | None = None,
+    holiday_dates: Collection[date] | None = None,
 ) -> pd.DataFrame:
     """Return an hourly frame with leakage-safe calendar, weather and demand features.
 

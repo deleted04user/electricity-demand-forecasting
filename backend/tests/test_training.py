@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import joblib
@@ -103,6 +104,13 @@ def test_training_preserves_or_promotes_with_backup_and_honest_provenance(
     tmp_path, monkeypatch, offset, promoted
 ):
     root = tmp_path / "repo"
+
+    class FrozenClock:
+        @staticmethod
+        def now(tz):
+            return datetime(2026, 10, 17, tzinfo=UTC)
+
+    monkeypatch.setattr(modeling, "datetime", FrozenClock)
     model_path = root / "models/active.pkl"
     model_path.parent.mkdir(parents=True)
     source = tmp_path / "verified.csv"
@@ -144,10 +152,17 @@ def test_training_preserves_or_promotes_with_backup_and_honest_provenance(
             hashlib.sha256((root / report["backup_path"]).read_bytes()).hexdigest() == original_hash
         )
         assert joblib.load(model_path)["model"].offset == offset
+        manifest = json.loads((root / "models/artifact-manifest.json").read_text())
+        assert manifest["model_sha256"] == hashlib.sha256(model_path.read_bytes()).hexdigest()
+        assert manifest["features"] == ["signal"]
         assert not model_path.with_name(model_path.name + ".tmp").exists()
     else:
         assert report["outcome"] == "candidate_retained" and report["backup_path"] is None
         assert hashlib.sha256(model_path.read_bytes()).hexdigest() == original_hash
+
+    second = modeling.run_training(source)
+    assert second["candidate_path"] != report["candidate_path"]
+    assert len(list((root / "models/candidates").glob("evaluation_*.json"))) == 2
 
 
 def test_synthetic_guard_cannot_be_bypassed_with_relative_path(monkeypatch):
@@ -155,6 +170,35 @@ def test_synthetic_guard_cannot_be_bypassed_with_relative_path(monkeypatch):
     for path in (None, Path("data/electricity_demand_2025.xlsx"), modeling.DATA_PATH):
         with pytest.raises(RuntimeError, match="bundled synthetic"):
             modeling.run_training(path)
+
+
+def test_manifest_publication_failure_restores_the_previous_active_model(tmp_path, monkeypatch):
+    root = tmp_path / "repo"
+    model_path = root / "models/active.pkl"
+    model_path.parent.mkdir(parents=True)
+    source = tmp_path / "local.csv"
+    source.write_text("caller supplied data\n", encoding="utf-8")
+    joblib.dump({"model": FakeDemandModel(5), "features": ["signal"]}, model_path)
+    previous = model_path.read_bytes()
+    manifest = root / "models/artifact-manifest.json"
+    manifest.write_text('{"original": true}', encoding="utf-8")
+    candidate = modeling.Candidate("selected", ("signal",), {"n_estimators": 3})
+    monkeypatch.setattr(modeling, "ROOT", root)
+    monkeypatch.setattr(modeling, "ACTIVE_MODEL_PATH", model_path)
+    monkeypatch.setattr(modeling, "load_hourly_data", lambda path: training_frame())
+    monkeypatch.setattr(modeling, "add_engineered_features", lambda frame: frame)
+    monkeypatch.setattr(modeling, "select_configuration", lambda frame: (candidate, []))
+    monkeypatch.setattr(modeling, "_fit_selected", lambda frame, winner: (FakeDemandModel(), {}))
+
+    def fail_publication(*args):
+        raise OSError("manifest cannot be published")
+
+    monkeypatch.setattr(modeling, "publish_model_manifest", fail_publication)
+    with pytest.raises(OSError, match="manifest cannot be published"):
+        modeling.run_training(source)
+    assert model_path.read_bytes() == previous
+    assert json.loads(manifest.read_text()) == {"original": True}
+    assert not model_path.with_name("active.pkl.tmp").exists()
 
 
 def test_synthetic_guard_rejects_renamed_copy_before_training(tmp_path, monkeypatch):
