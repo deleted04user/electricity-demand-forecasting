@@ -9,7 +9,7 @@ omit = ["backend/tests/*"]
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 75
+fail_under = 90
 
 [tool.ruff]
 target-version = "py312"
@@ -34,3 +34,7 @@ show_error_codes = true
 [[tool.mypy.overrides]]
 module = ["joblib", "sklearn.*", "holidays.*", "xgboost.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["backend.settings", "backend.artifacts", "backend.api_models", "backend.service", "backend.diagnostics", "backend.main", "backend.evaluate"]
+strict = true

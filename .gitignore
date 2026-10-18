@@ -58,12 +58,21 @@ data/*.xlsx.bak
 *.log
 .venv-local/
 .venv-quality/
+.venv-research/
 .coverage
 .coverage.*
 coverage.xml
 htmlcov/
 .mypy_cache/
+.mypy-service-cache/
 .ruff_cache/
+coverage.json
+quality-evidence.json
+test-results/
+playwright-report/
+experiments/reports/*/
+experiments/reports/**/mlflow.db*
+experiments/reports/**/mlflow_artifacts/
 
 # Local browser profiles, test caches, and report-rendering intermediates
 .chrome-report/

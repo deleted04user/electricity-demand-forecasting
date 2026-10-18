@@ -16,13 +16,14 @@ jobs:
   backend:
     name: Backend (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-24.04, windows-2025]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: "3.12"
           cache: pip
@@ -35,22 +36,29 @@ jobs:
       - name: Check backend types
         run: python -m mypy backend
       - name: Test with branch coverage gate
-        run: python -m pytest --cov=backend --cov-report=term-missing --cov-report=xml -q
-      - uses: actions/upload-artifact@v4
+        run: python -m pytest --cov=backend --cov-branch --cov-fail-under=90 --cov-report=term-missing --cov-report=xml --cov-report=json --junitxml=test-results/backend.xml -q
+      - name: Record tested revision and artifact fingerprints
+        run: python scripts/quality_evidence.py --coverage coverage.json --junit test-results/backend.xml --output quality-evidence.json
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: coverage-${{ matrix.os }}
-          path: coverage.xml
+          path: |
+            coverage.xml
+            coverage.json
+            test-results/backend.xml
+            quality-evidence.json
           if-no-files-found: ignore
 
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 24
           cache: npm
@@ -61,10 +69,11 @@ jobs:
 
   dependencies:
     name: Audit Python dependencies
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: "3.12"
           cache: pip
@@ -73,12 +82,20 @@ jobs:
       - run: python -m pip_audit --strict --disable-pip -r requirements-api.lock.txt
       - run: python -m pip_audit --strict --disable-pip -r requirements-dev.lock.txt
       - run: python -m pip_audit --strict --disable-pip -r requirements.lock.txt
+      - name: Audit experiment dependencies
+        run: python -m pip_audit --strict --disable-pip -r requirements-research.lock.txt
 
   containers:
-    name: Build and smoke test containers
-    runs-on: ubuntu-latest
+    name: Container and browser integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
       - run: docker compose config --quiet
       - run: docker compose build
       - run: docker compose up -d --wait --wait-timeout 180
@@ -88,6 +105,26 @@ jobs:
           curl --fail http://localhost:8000/api/health
           curl --fail http://localhost:8080/api/health
           curl --fail http://localhost:8080/api/meta
+      - name: Install browser test dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps --only-shell chromium
+      - name: Exercise dashboard against the containerized API
+        working-directory: frontend
+        env:
+          E2E_BASE_URL: http://127.0.0.1:8080
+        run: npm run test:e2e
+      - name: Upload browser report and failure traces
+        uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: browser-report
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Container logs
         if: failure()
         run: docker compose logs --no-color
