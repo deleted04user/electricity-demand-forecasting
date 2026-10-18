@@ -48,6 +48,8 @@ Open [localhost:5173](http://localhost:5173). Vite proxies `/api` to the backend
 
 ## Verify a checkout
 
+Standard project metadata in [pyproject.toml](pyproject.toml) declares runtime and optional development, research and legacy dependencies for package tools. The hashed requirements locks remain the reproducible setup path. See [docs/PACKAGING.md](docs/PACKAGING.md) for dependency consistency and package-resource scope.
+
 From the root, with the Python environment active:
 
 ```bash
@@ -125,6 +127,14 @@ Copy [.env.example](.env.example) to `.env` and pass `--env-file .env` to Uvicor
 | `WEATHER_FORECAST_PATH` | Optional local future-weather CSV/XLSX |
 | `VERIFIED_EVENTS_PATH` | Optional local CSV/XLSX containing `Date` and `Event` |
 | `CORS_ORIGINS` | Comma-separated allowed browser origins; local Vite origins by default |
+| `API_PORT`, `FRONTEND_PORT` | Compose host ports; default `8000` and `8080` |
+| `E2E_BASE_URL` | Browser-test URL; default `http://127.0.0.1:8080`; export it in the Playwright shell |
+| `CI` | Set automatically by GitHub Actions; leave unset/empty locally; any nonempty value enables browser-test CI mode |
+| `MLFLOW_DISABLE_TELEMETRY`, `MLFLOW_ENABLE_OTLP_EXPORTER` | Research forces `true` / `false` before importing MLflow |
+| `MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING`, `MLFLOW_DISABLE_AGENT_HINT` | Research worker forces `false` / `1` for local tracking |
+| `VITE_API_BASE_URL` | Optional separate API origin in `frontend/.env`; empty uses the Vite/nginx proxy |
+
+The root example and [frontend/.env.example](frontend/.env.example) list the environment settings. Uvicorn loads `.env` only when passed `--env-file .env`; Compose reads it for host-port interpolation. Playwright does not load the root file automatically, and research enforces its privacy settings itself. Empty weather/event paths disable those optional inputs.
 
 Demand data requires `Timestamp`, `Demand`, `Temperature`, and `Humidity`. Use unique timestamps aligned to whole hours and numeric measurements; use either naive local timestamps or consistently timezone-aware timestamps. Invalid timestamps, non-finite measurements, negative demand, and humidity outside 0–100 are rejected. Explicit missing values and hourly gaps remain visible in the quality report. The weather file requires `Timestamp`, `Temperature`, and `Humidity` covering every requested future hour, with aware timestamps converted to the configured local clock. CSV, XLSX, and legacy XLS readers are included in the locked API environment.
 
@@ -154,7 +164,11 @@ python -m pip install --require-hashes -r requirements-research.lock.txt
 python -m backend.experiments --config configs/experiments.json --output experiments/reports/my_run --mlflow
 ```
 
-Use a new output directory for each run. The checked-in protocol caps fits, threads, and total execution time. Read [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md), the [executed report](experiments/reports/bounded_synthetic_20261018_v2/REPORT.md), and [MODEL_CARD.md](MODEL_CARD.md) for reproduction details and limitations. The 2024 diagnostic period has already informed evaluation/promotion decisions; this study does not relabel it as an untouched independent test.
+Use a new output directory for each run. The checked-in protocol caps fits, threads, and total execution time. Read [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md), the [executed report](experiments/reports/bounded_synthetic_20261018_v3/REPORT.md), and [MODEL_CARD.md](MODEL_CARD.md) for reproduction details and limitations. The 2024 diagnostic period has already informed evaluation/promotion decisions; this study does not relabel it as an untouched independent test.
+
+## Optional Streamlit dashboard
+
+`dashboard.py` is a legacy Streamlit example. Use a separate environment with `requirements.lock.txt`, then run `python -m streamlit run dashboard.py`. Its UI is outside the Quality CI scope, which exercises the FastAPI/React application. See [the running guide](RUNNING_THE_REACT_DASHBOARD.md) for setup details.
 
 ## Repository guide
 

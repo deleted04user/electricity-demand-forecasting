@@ -2,6 +2,12 @@
 
 This log records substantive changes from the repository's development history.
 
+## v0.2.1 — 2026-10-18
+
+- Declare standard Python package metadata and dependency groups, including the required Pydantic 2 minimum, while retaining the tested locked package versions.
+- Document every environment setting with working defaults and clarify which processes load them.
+- Use the conventional `docker-compose.yml` filename for tool discovery; retain the verified two-service configuration.
+
 ## v0.2.0 — 2026-10-18
 
 - Introduced a managed application lifespan, independent forecast-service instances, frozen settings, and a separate liveness endpoint with controlled readiness failures.

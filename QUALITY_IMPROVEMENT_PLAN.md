@@ -11,7 +11,7 @@ Verified code baseline: `d595a2d6abd87d954891183d61b699dc19b795dc`, with 12 comm
 | Assessment claim | Published evidence at the verified baseline |
 | --- | --- |
 | No Python lockfile | `requirements-api.lock.txt`, `requirements-dev.lock.txt`, and `requirements.lock.txt`, with pinned versions and hashes |
-| No container setup | Root and frontend Dockerfiles, `compose.yaml`, and a successful container build/start/proxy smoke test |
+| No container setup | Root and frontend Dockerfiles, `docker-compose.yml`, and a successful container build/start/proxy smoke test |
 | No lint or type checking | Ruff lint/format and mypy steps in `.github/workflows/quality.yml` |
 | No coverage enforcement | Branch coverage enabled and a 75% floor in `pyproject.toml`; the verified local run achieved 93.93% |
 | No dependency audit or updates | Python and npm audit jobs, plus `.github/dependabot.yml` |
@@ -117,9 +117,11 @@ Planning estimate: approximately 4-7 focused engineering days, plus the maintena
 ## Implementation record — 18 October 2026
 
 - Service ownership, managed startup, readiness/liveness, trusted artifact verification, timezone isolation, typed responses and identity-checked prepared diagnostics are implemented and covered by failure-path tests.
-- The bounded research protocol has executed on the synthetic workbook, including three chronological folds, feature ablations, seed repeats, segmented errors, interval diagnostics and local MLflow tracking. The [measured report](experiments/reports/bounded_synthetic_20261018_v2/REPORT.md) and [model card](MODEL_CARD.md) preserve its scope and limitations. The serving model is unchanged.
-- The latest local full backend run passed 172 tests with 95.37% branch-aware coverage. The enforced floor is now 90%. Frontend lint, 17 component tests, build and dependency audit passed; six repeated Chromium scenarios exercised real forecast and recovery behavior.
+- The bounded research protocol has executed on the synthetic workbook, including three chronological folds, feature ablations, seed repeats, segmented errors, interval diagnostics and local MLflow tracking. The [measured report](experiments/reports/bounded_synthetic_20261018_v3/REPORT.md) and [model card](MODEL_CARD.md) preserve its scope and limitations. The serving model is unchanged.
+- The v0.2.0 local full backend run passed 172 tests with 95.37% branch-aware coverage. The enforced floor is now 90%. Frontend lint, 17 component tests, build and dependency audit passed; six repeated Chromium scenarios exercised real forecast and recovery behavior.
 - Independent review examined runtime lifecycle and artifacts, research leakage and missing targets, interval arithmetic, and browser/container integration. Review findings were fixed and tested before publication.
 - [QUALITY_EVIDENCE.md](QUALITY_EVIDENCE.md) maps implementation to tests, reports and CI artifacts. The release checks run on Linux/Windows and exercise the Docker stack in Chromium. Final commit-specific CI, fresh-clone validation and the external score must be verified at publication.
 
 Longer maintenance history and any buyer-specific source-volume requirement remain external eligibility factors. This implementation does not manufacture elapsed history, contributors or a score.
+
+The first fresh public-copy assessment returned **80 (B)** on 18 October 2026, a measured increase of 17.3 points from the supplied 62.7. Release v0.2.0 passed all five CI jobs and independent fresh-clone validation. A follow-up corrects scanner-visible dependency metadata, the Pydantic 2 contract, environment documentation and Compose-file discoverability. The target of exceeding 80 requires a subsequent external result; genuine maintenance over time remains ongoing work.

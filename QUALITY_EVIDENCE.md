@@ -13,9 +13,9 @@ Use the commit SHA of the [Quality workflow](https://github.com/deleted04user/el
 | Code checks | `pyproject.toml`, `.github/workflows/quality.yml` | Ruff lint/format, mypy including strict service boundaries, Linux and Windows tests |
 | Coverage | Branch coverage with a 90% floor | CI coverage JSON/XML, JUnit results, and generated `quality-evidence.json` in each backend artifact |
 | Reproducible research | `configs/experiments.json`, `backend/experiments*.py` | Fixed chronological folds, bounded fits/time/threads, seeds and identity hashes, optional local MLflow tracking, protocol tests |
-| Analysis | `experiments/reports/bounded_synthetic_20261018_v2/` | Portable run/segment/interval tables, executed report, and `MODEL_CARD.md` with limitations |
+| Analysis | `experiments/reports/bounded_synthetic_20261018_v3/` | Portable run/segment/interval tables, executed report, and `MODEL_CARD.md` with limitations |
 | Dependencies | Four `requirements*.lock.txt` files and frontend `package-lock.json` | Hash-checked Python installs, Python/npm vulnerability audits, and Dependabot configuration |
-| Packaged application | Root/frontend Dockerfiles, `compose.yaml`, nginx proxy | Container build, readiness, dashboard/API smoke requests, real Chromium forecast/error/recovery tests |
+| Packaged application | Root/frontend Dockerfiles, `docker-compose.yml`, nginx proxy | Container build, readiness, dashboard/API smoke requests, real Chromium forecast/error/recovery tests |
 | Onboarding | `README.md`, `RUNNING_THE_REACT_DASHBOARD.md`, environment examples, `CONTRIBUTING.md` | Explicit fresh-clone commands; release validation uses the supported Python/Node runtimes |
 
 ## Machine-readable evidence
@@ -39,6 +39,8 @@ The study is explicitly synthetic research. The served artifact is protected fro
 
 ## External assessment
 
-The previously supplied score report repeats missing-lock/Docker/CI claims from an earlier revision. A new assessment should identify its analyzed commit and scan time. Match those against the published files and completed workflow before comparing category scores.
+A fresh public-copy DataFactor assessment on 18 October 2026 returned **80 overall (B)**, compared with the previously supplied 62.7. It recognized the tested service, bounded experiments, MLflow, strict checks and browser integration. It still missed the existing Compose file and Python lock inputs in some structural statistics; standard package metadata, complete environment documentation and the conventional Compose filename address the useful follow-up findings.
+
+[Release v0.2.0](https://github.com/deleted04user/electricity-demand-forecasting/releases/tag/v0.2.0) and [its final five-job Quality run](https://github.com/deleted04user/electricity-demand-forecasting/actions/runs/39100290251) preserve that engineering baseline. The external report does not expose an analyzed SHA, so match its scan time and evidence against the submitted revision before attributing a later score. Scores and licensing estimates are separate from executable CI evidence.
 
 Readiness for installation, tests, and review is verifiable here. The evaluator's minimum source volume, task capacity, numerical weights, and offer decision are separate requirements. The repository history should be assessed as it actually exists, including real focused changes and tests; release tags and documentation do not substitute for sustained maintenance.
