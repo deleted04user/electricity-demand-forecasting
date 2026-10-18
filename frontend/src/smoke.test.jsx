@@ -39,6 +39,8 @@ describe("dashboard pages render against real backend payloads", () => {
     render(<ModelPerformance />);
     await waitFor(() => expect(screen.getByText(/MAE/i)).toBeTruthy());
     expect(screen.getByText(`${mockPayloads["model-performance"].metrics.mae} MW`)).toBeTruthy();
+    expect(screen.getByText(`${mockPayloads["model-performance"].metrics.wape}%`)).toBeTruthy();
+    expect(screen.getByText(`Explains ${(mockPayloads["model-performance"].metrics.r2 * 100).toFixed(1)}% of variance`)).toBeTruthy();
   });
 
   it("Forecast renders and fetches a prediction", async () => {
@@ -77,6 +79,36 @@ it("shows baseline comparison", async () => {
   mockFetchFor({ "/api/model-performance": { ...mockPayloads["model-performance"], baselines: { "24-hour naive": { mae: 178.25, rmse: 224.53, r2: .786, wape: 6.09 } } } });
   render(<ModelPerformance />);
   expect(await screen.findByText("24-hour naive")).toBeTruthy();
+});
+
+it("shows unavailable metrics without inventing zero scores and preserves scored-row counts", async () => {
+  const unavailable = { mae: null, rmse: null, r2: null, wape: null, bias: null };
+  const zeroErrors = { mae: 0, rmse: 0, r2: 0, wape: 0, bias: 0 };
+  mockFetchFor({
+    "/api/model-performance": {
+      ...mockPayloads["model-performance"],
+      metrics: unavailable,
+      baselines: { "24-hour naive": unavailable },
+      horizon_metrics: {
+        one_step_observed_lag: unavailable,
+        recursive_multi_step: {
+          "1": { metrics: zeroErrors, origins: 2, scored_rows: 2 },
+          "24": { metrics: unavailable, origins: 2, scored_rows: 0 },
+        },
+      },
+    },
+  });
+  const { container } = render(<ModelPerformance />);
+  await screen.findByText("Variance explanation unavailable");
+  expect([...container.querySelectorAll(".metric-value")].map((node) => node.textContent))
+    .toEqual(["Unavailable", "Unavailable", "Unavailable", "Unavailable"]);
+  const cells = (name) => [...screen.getByRole("row", { name }).querySelectorAll("td")]
+    .map((node) => node.textContent);
+  expect(cells(/24-hour naive/)).toEqual(["24-hour naive", "Unavailable", "Unavailable", "Unavailable", "Unavailable"]);
+  expect(cells(/Observed-lag one-step/)).toEqual(["Observed-lag one-step", "Unavailable", "Unavailable", "Unavailable", "—"]);
+  expect(cells(/Recursive 24h/)).toEqual(["Recursive 24h", "Unavailable", "Unavailable", "Unavailable", "0"]);
+  expect(cells(/Recursive 1h/)).toEqual(["Recursive 1h", "0", "0", "0%", "2"]);
+  expect(container.textContent).not.toMatch(/null|undefined|NaN|Explains 0\.0% of variance/);
 });
 
 it("shows a future API error", async () => {

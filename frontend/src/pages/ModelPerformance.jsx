@@ -6,6 +6,10 @@ import {
 import { api } from "../api";
 import Metric from "../components/Metric";
 
+function metricDisplay(value, suffix = "") {
+  return value == null ? "Unavailable" : `${value}${suffix}`;
+}
+
 export default function ModelPerformance() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -34,19 +38,20 @@ export default function ModelPerformance() {
       {data.baselines && <div className="card"><div className="section-title">Naive baseline comparison (same test rows)</div>
         <table><thead><tr><th>Model</th><th>MAE (MW)</th><th>RMSE (MW)</th><th>R²</th><th>WAPE (%)</th></tr></thead>
           <tbody>{Object.entries(data.baselines).map(([name, metrics]) =>
-            <tr key={name}><td>{name}</td><td>{metrics.mae}</td><td>{metrics.rmse}</td><td>{metrics.r2}</td><td>{metrics.wape}</td></tr>)}</tbody>
+            <tr key={name}><td>{name}</td><td>{metricDisplay(metrics.mae)}</td><td>{metricDisplay(metrics.rmse)}</td><td>{metricDisplay(metrics.r2)}</td><td>{metricDisplay(metrics.wape)}</td></tr>)}</tbody>
         </table></div>}
       <div className="grid grid-4">
-        <Metric label="MAE" value={`${data.metrics.mae} MW`} sub="Mean Absolute Error" />
-        <Metric label="RMSE" value={`${data.metrics.rmse} MW`} sub="Root Mean Squared Error" />
-        <Metric label="R² Score" value={data.metrics.r2} sub={`Explains ${(data.metrics.r2 * 100).toFixed(1)}% of variance`} />
-        <Metric label="WAPE" value={`${data.metrics.wape}%`} sub="Weighted Absolute % Error" />
+        <Metric label="MAE" value={metricDisplay(data.metrics.mae, " MW")} sub="Mean Absolute Error" />
+        <Metric label="RMSE" value={metricDisplay(data.metrics.rmse, " MW")} sub="Root Mean Squared Error" />
+        <Metric label="R² Score" value={metricDisplay(data.metrics.r2)} sub={data.metrics.r2 == null ? "Variance explanation unavailable" : `Explains ${(data.metrics.r2 * 100).toFixed(1)}% of variance`} />
+        <Metric label="WAPE" value={metricDisplay(data.metrics.wape, "%")} sub="Weighted Absolute % Error" />
       </div>
       {data.horizon_metrics && <div className="card"><div className="section-title">Horizon-specific evaluation</div>
         <p>One-step uses observed lag/weather inputs. Multi-step values are sampled recursive historical-proxy estimates; they are not interchangeable.</p>
-        <table><thead><tr><th>Mode / horizon</th><th>MAE</th><th>RMSE</th><th>WAPE</th></tr></thead><tbody>
-          <tr><td>Observed-lag one-step</td><td>{data.horizon_metrics.one_step_observed_lag.mae}</td><td>{data.horizon_metrics.one_step_observed_lag.rmse}</td><td>{data.horizon_metrics.one_step_observed_lag.wape}%</td></tr>
-          {Object.entries(data.horizon_metrics.recursive_multi_step).map(([h, value]) => <tr key={h}><td>Recursive {h}h</td><td>{value.metrics.mae}</td><td>{value.metrics.rmse}</td><td>{value.metrics.wape}%</td></tr>)}
+        <p>Scored rows include only forecasts with observed demand targets. Missing targets do not contribute to the metrics.</p>
+        <table><thead><tr><th>Mode / horizon</th><th>MAE</th><th>RMSE</th><th>WAPE</th><th>Scored rows</th></tr></thead><tbody>
+          <tr><td>Observed-lag one-step</td><td>{metricDisplay(data.horizon_metrics.one_step_observed_lag.mae)}</td><td>{metricDisplay(data.horizon_metrics.one_step_observed_lag.rmse)}</td><td>{metricDisplay(data.horizon_metrics.one_step_observed_lag.wape, "%")}</td><td>{data.horizon_metrics.one_step_observed_lag.scored_rows ?? "—"}</td></tr>
+          {Object.entries(data.horizon_metrics.recursive_multi_step).map(([h, value]) => <tr key={h}><td>Recursive {h}h</td><td>{metricDisplay(value.metrics.mae)}</td><td>{metricDisplay(value.metrics.rmse)}</td><td>{metricDisplay(value.metrics.wape, "%")}</td><td>{value.scored_rows ?? "—"}</td></tr>)}
         </tbody></table></div>}
 
       <div className="card">
