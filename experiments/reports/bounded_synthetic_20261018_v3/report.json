@@ -1,0 +1,498 @@
+{
+  "schema_version": 1,
+  "run_id": "20261018T053212Z_ab8471e7",
+  "created_utc": "2026-10-18T05:33:00.198361+00:00",
+  "provenance": {
+    "git_revision": "9895f3cdebfeb90b157564b3bdfcbc527f8c9ad9",
+    "git_dirty": true,
+    "git_dirty_scope": "tracked repository files; new research sources are content-hashed below",
+    "git_status": [
+      " M .env.example",
+      " M CHANGELOG.md",
+      " M QUALITY_EVIDENCE.md",
+      " M QUALITY_IMPROVEMENT_PLAN.md",
+      " M README.md",
+      " M backend/main.py",
+      "R  compose.yaml -> docker-compose.yml",
+      " M frontend/README.md",
+      " M pyproject.toml",
+      " M requirements-api.lock.txt",
+      " M requirements-api.txt",
+      " M requirements-dev.lock.txt",
+      " M requirements-research.lock.txt",
+      " M requirements.lock.txt"
+    ],
+    "data_path": "data/electricity_demand_2025.xlsx",
+    "data_sha256": "c264a4001837a2eb3e7e3e6df375fa07e3d314ca7eef28023e0429822dcceaf3",
+    "config_sha256": "3b7e921183ed15219e8065630626c72d1408e9fef7076c0f80c48682aea564a5",
+    "source_and_lock_sha256": {
+      "backend/experiments.py": "92381726b50a98cb1ffcfe9fdd157e6ed5b7eb307ad275eebb62b1c76f3a3218",
+      "backend/experiments_analysis.py": "7487fe09c9329fa22980d459f065aa77dafddb8d0d51c8d4f4ff299ab08dba74",
+      "backend/experiments_protocol.py": "6648bca130d73f327c236e566da3545a9252afbf7f0921748300f6db79077eaa",
+      "backend/features.py": "1f994b9d919650a58ffa3af887ee5a69d8fa64f5db2c74bcb779d4f2d2bae127",
+      "backend/ingestion.py": "9057dacb7c702a13e43684d90d32afdde56a4823ceead1a3649f880ccf6fe8c6",
+      "backend/modeling.py": "4b5a4d7cd660990d3751e4ae4e6e5ef3782fb41848cb37c21a74250d2e82ba1d",
+      "requirements-api.lock.txt": "5c2427de58488608c5a1c804c1dbf2a33d6159fe7c4c7f97ae27615cf99f634a",
+      "requirements-dev.lock.txt": "319351858503dd2e956bfaff5877e99c04ea3f5a13e088263b27698802c59143",
+      "requirements-research.lock.txt": "f4a293f2058366b3dd0967480504504b0e5b185713865e3b90b1ce86c4d2b906",
+      "requirements-research.txt": "5d0d9469281476060ed86430eff622ebca28551d5914598aeb7d2e84bfd7f538",
+      "requirements.lock.txt": "de680bf077622055509945d70f27d5867544143339415800df26fc56f8ef7464"
+    },
+    "hash_contract": "Python source CRLF normalized to LF; other files byte-exact SHA256",
+    "source_manifest_sha256": "2e2eb1464d28868eb9b5453354c195ae49f907da3c1089c42341ff4f58b4bd6d",
+    "dataset_provenance": "bundled_synthetic",
+    "production_promotion": false
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "xgboost": "3.4.1",
+    "holidays": "0.106",
+    "mlflow-skinny": "3.17.1"
+  },
+  "config": {
+    "protocol_version": 1,
+    "dataset": "bundled_synthetic",
+    "purpose": "research_only_no_promotion",
+    "folds": [
+      "2023_jan_apr",
+      "2023_may_aug",
+      "2023_sep_dec"
+    ],
+    "variants": [
+      "lags",
+      "lags_weather",
+      "lags_calendar",
+      "lags_rolling",
+      "full"
+    ],
+    "initial_seed": 42,
+    "repeat_variants": [
+      "lags",
+      "full"
+    ],
+    "repeat_seeds": [
+      43,
+      44
+    ],
+    "metrics": [
+      "mae",
+      "rmse",
+      "r2",
+      "wape",
+      "bias"
+    ],
+    "selection": "seed42_mean_fold_wape_then_rmse",
+    "weather": "previous_observed_hour",
+    "parameters": {
+      "n_estimators": 120,
+      "learning_rate": 0.06,
+      "max_depth": 4,
+      "min_child_weight": 5,
+      "subsample": 0.85,
+      "colsample_bytree": 0.85,
+      "reg_alpha": 0.1,
+      "reg_lambda": 3.0
+    },
+    "budget": {
+      "max_fits": 28,
+      "max_seconds": 300,
+      "threads": 2
+    },
+    "historical_diagnostics": {
+      "start": "2024-01-01",
+      "end": "2024-12-31 23:00:00",
+      "origin_days": [
+        1
+      ],
+      "horizons": [
+        1,
+        6,
+        24,
+        72,
+        168
+      ],
+      "nominal_coverage": 0.9,
+      "interval_rule": "2023_oof_absolute_residual_q90_times_sqrt_horizon"
+    }
+  },
+  "active_artifact_sha256_before": "cb098c1db4b70782e4f4642280905e5f31fd2bcab80cb399ece96c6072f957af",
+  "active_artifact_sha256_after": "cb098c1db4b70782e4f4642280905e5f31fd2bcab80cb399ece96c6072f957af",
+  "fits_completed": 28,
+  "selected_variant": "full",
+  "selected_features": [
+    "hour",
+    "dayofweek",
+    "month",
+    "year",
+    "dayofyear",
+    "quarter",
+    "weekofyear",
+    "hour_sin",
+    "hour_cos",
+    "dayofweek_sin",
+    "dayofweek_cos",
+    "is_weekend",
+    "is_holiday",
+    "Temperature",
+    "Humidity",
+    "temperature_squared",
+    "demand_lag_1h",
+    "demand_lag_2h",
+    "demand_lag_3h",
+    "demand_lag_6h",
+    "demand_lag_12h",
+    "demand_lag_24h",
+    "demand_lag_48h",
+    "demand_lag_72h",
+    "demand_lag_168h",
+    "demand_lag_336h",
+    "demand_rolling_mean_6h",
+    "demand_rolling_std_6h",
+    "demand_rolling_mean_24h",
+    "demand_rolling_std_24h",
+    "demand_rolling_mean_168h",
+    "demand_rolling_std_168h"
+  ],
+  "comparisons": [
+    {
+      "variant": "full",
+      "seed": 42,
+      "folds": 3,
+      "mean_fold_wape": 3.8818900486946006,
+      "mean_fold_rmse": 139.32370636165976
+    },
+    {
+      "variant": "full",
+      "seed": 43,
+      "folds": 3,
+      "mean_fold_wape": 3.877263485388319,
+      "mean_fold_rmse": 139.23406322897426
+    },
+    {
+      "variant": "full",
+      "seed": 44,
+      "folds": 3,
+      "mean_fold_wape": 3.8796617501164357,
+      "mean_fold_rmse": 139.39152367017573
+    },
+    {
+      "variant": "lags",
+      "seed": 42,
+      "folds": 3,
+      "mean_fold_wape": 4.086371294723,
+      "mean_fold_rmse": 146.6878124571526
+    },
+    {
+      "variant": "lags",
+      "seed": 43,
+      "folds": 3,
+      "mean_fold_wape": 4.079304646294392,
+      "mean_fold_rmse": 146.5313370253257
+    },
+    {
+      "variant": "lags",
+      "seed": 44,
+      "folds": 3,
+      "mean_fold_wape": 4.079180507388231,
+      "mean_fold_rmse": 146.4849597494211
+    },
+    {
+      "variant": "lags_calendar",
+      "seed": 42,
+      "folds": 3,
+      "mean_fold_wape": 3.886789533255906,
+      "mean_fold_rmse": 139.608179057584
+    },
+    {
+      "variant": "lags_rolling",
+      "seed": 42,
+      "folds": 3,
+      "mean_fold_wape": 4.055119008215935,
+      "mean_fold_rmse": 145.6598946956434
+    },
+    {
+      "variant": "lags_weather",
+      "seed": 42,
+      "folds": 3,
+      "mean_fold_wape": 4.0746861040694045,
+      "mean_fold_rmse": 146.28458929816603
+    },
+    {
+      "variant": "naive168",
+      "seed": 42,
+      "folds": 3,
+      "mean_fold_wape": 5.038449382120579,
+      "mean_fold_rmse": 181.2246290621663
+    },
+    {
+      "variant": "naive24",
+      "seed": 42,
+      "folds": 3,
+      "mean_fold_wape": 6.16412940495087,
+      "mean_fold_rmse": 223.7976347448235
+    }
+  ],
+  "seed_variability": [
+    {
+      "variant": "lags",
+      "mean_wape": 4.081618816135208,
+      "std_wape": 0.0033608919612286028,
+      "min_wape": 4.079180507388231,
+      "max_wape": 4.086371294723
+    },
+    {
+      "variant": "full",
+      "mean_wape": 3.8796050947331184,
+      "std_wape": 0.001889211366523439,
+      "min_wape": 3.877263485388319,
+      "max_wape": 3.8818900486946006
+    }
+  ],
+  "final_research_refit": {
+    "seed": 42,
+    "training_start": "2020-01-15 00:00:00",
+    "training_end": "2023-12-31 23:00:00",
+    "rows": 34189,
+    "fit_seconds": 0.5470000000000255
+  },
+  "historical_diagnostics": {
+    "status": "reused_historical_2024_not_untouched_test",
+    "rows": 8666,
+    "metrics": {
+      "mae": 112.11168765348236,
+      "rmse": 140.79212302886324,
+      "r2": 0.9158358612298745,
+      "wape": 3.832155195627892,
+      "bias": -12.102785014036535
+    },
+    "intervals": [
+      {
+        "horizon_hours": 1,
+        "origins": 12,
+        "planned_origins": 12,
+        "missing_target_origins": 0,
+        "nominal_coverage": 0.9,
+        "empirical_coverage": 1.0,
+        "mean_width_mw": 458.408203125,
+        "calibration_radius_mw": 229.2041015625,
+        "mae": 82.37266276041669,
+        "rmse": 103.6901746061929,
+        "r2": 0.2770986567177035,
+        "wape": 3.4298945850022093,
+        "bias": -22.7851920572917
+      },
+      {
+        "horizon_hours": 6,
+        "origins": 12,
+        "planned_origins": 12,
+        "missing_target_origins": 0,
+        "nominal_coverage": 0.9,
+        "empirical_coverage": 1.0,
+        "mean_width_mw": 1122.8661915623554,
+        "calibration_radius_mw": 229.2041015625,
+        "mae": 125.14690999348954,
+        "rmse": 145.26708387019954,
+        "r2": 0.325581541280633,
+        "wape": 4.557680205261141,
+        "bias": -7.343065592447904
+      },
+      {
+        "horizon_hours": 24,
+        "origins": 12,
+        "planned_origins": 12,
+        "missing_target_origins": 0,
+        "nominal_coverage": 0.9,
+        "empirical_coverage": 1.0,
+        "mean_width_mw": 2245.732383124711,
+        "calibration_radius_mw": 229.2041015625,
+        "mae": 112.14626627604169,
+        "rmse": 125.59699824419968,
+        "r2": 0.34174206982234967,
+        "wape": 3.6693404518922232,
+        "bias": 63.7018977864584
+      },
+      {
+        "horizon_hours": 72,
+        "origins": 11,
+        "planned_origins": 12,
+        "missing_target_origins": 1,
+        "nominal_coverage": 0.9,
+        "empirical_coverage": 1.0,
+        "mean_width_mw": 3889.7225877747333,
+        "calibration_radius_mw": 229.2041015625,
+        "mae": 75.12739435369328,
+        "rmse": 90.2646969812722,
+        "r2": 0.6902054904777817,
+        "wape": 2.427657560685836,
+        "bias": -15.483633700284082
+      },
+      {
+        "horizon_hours": 168,
+        "origins": 12,
+        "planned_origins": 12,
+        "missing_target_origins": 0,
+        "nominal_coverage": 0.9,
+        "empirical_coverage": 1.0,
+        "mean_width_mw": 5915.095871259138,
+        "calibration_radius_mw": 229.2041015625,
+        "mae": 111.24280517578124,
+        "rmse": 137.80935861758334,
+        "r2": 0.704380477525109,
+        "wape": 3.6106666860763816,
+        "bias": -12.904509277343701
+      }
+    ],
+    "demand_band_quartiles_mw": [
+      2429.99,
+      3171.56
+    ]
+  },
+  "reproduction_tolerance": {
+    "metric_absolute": 0.0001,
+    "note": "same locked packages and CPU architecture; timing, IDs and provenance differ"
+  },
+  "tracking": {
+    "backend": "local_sqlite",
+    "database": "mlflow.db",
+    "experiment_id": "1",
+    "runs": [
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_naive24_42",
+        "mlflow_run_id": "56fe04361be240f686f6a8208a2a1172"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_naive168_42",
+        "mlflow_run_id": "aa6381cf2ec04215b359d3036273cec2"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_lags_42",
+        "mlflow_run_id": "a4420a27c16145a5a74f3255579ffb72"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_lags_weather_42",
+        "mlflow_run_id": "ff2db7c380a64899bab771dd3e623f97"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_lags_calendar_42",
+        "mlflow_run_id": "bc4c0aac1644460ab8f58363fd0939fc"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_lags_rolling_42",
+        "mlflow_run_id": "4906bd5243664cc69b0d2200c8ea046e"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_full_42",
+        "mlflow_run_id": "2109a665a5f445f08abead7be5104c44"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_lags_43",
+        "mlflow_run_id": "b2f6c2c57d6340b4bae15748f0590b67"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_full_43",
+        "mlflow_run_id": "1feb627d15d34db197bfa250e6eac241"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_lags_44",
+        "mlflow_run_id": "9dc3bdc5d337447bb48e00d2110bdf70"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_jan_apr_full_44",
+        "mlflow_run_id": "06d928eaeae0416cbb8cfba1b342aadd"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_naive24_42",
+        "mlflow_run_id": "e6db832716424fd8976942e7320273a4"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_naive168_42",
+        "mlflow_run_id": "1967901f131e47ada988048b4e75cbd4"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_lags_42",
+        "mlflow_run_id": "2900735521d343958c4029105a13b4d7"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_lags_weather_42",
+        "mlflow_run_id": "4e3502dc887849608ceb4bd441d16f74"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_lags_calendar_42",
+        "mlflow_run_id": "87695d9b3ee54cb09ae424e1a414444c"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_lags_rolling_42",
+        "mlflow_run_id": "661804b385334badb40cf6129393babb"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_full_42",
+        "mlflow_run_id": "e6da5fc6eee84070a4e62569a84856e4"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_lags_43",
+        "mlflow_run_id": "f2b3a2176e8946b087c5d433fcc2c16c"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_full_43",
+        "mlflow_run_id": "133436eb04c94fd683f525cb44633507"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_lags_44",
+        "mlflow_run_id": "85893e5ae3924d5ea26e638053b4cfd3"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_may_aug_full_44",
+        "mlflow_run_id": "1a23246261044fa59fb74acbc83621cc"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_naive24_42",
+        "mlflow_run_id": "0580acadd0e045a38097c7fd640bdae7"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_naive168_42",
+        "mlflow_run_id": "7d5017c49abd47a687ddea7b1d4fa7c2"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_lags_42",
+        "mlflow_run_id": "473d6e1da9d6470686f66784e2faaa5e"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_lags_weather_42",
+        "mlflow_run_id": "84d6eb0aa2354adabf4bff47bf9f4b6c"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_lags_calendar_42",
+        "mlflow_run_id": "2be2679bd1b74744ab159406b2315609"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_lags_rolling_42",
+        "mlflow_run_id": "ba441e0b854c46bb88a02256cc6492cc"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_full_42",
+        "mlflow_run_id": "04a127c8f2ef4c36b5e724378db72bfc"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_lags_43",
+        "mlflow_run_id": "5d1d08977b91476a939feed75d6daf9c"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_full_43",
+        "mlflow_run_id": "ac10aa2450cc4644b0999378066e72c8"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_lags_44",
+        "mlflow_run_id": "0b2c9768ed104ed184d1b42dd9d708a7"
+      },
+      {
+        "portable_run_id": "20261018T053212Z_ab8471e7_2023_sep_dec_full_44",
+        "mlflow_run_id": "0a4f61c0ff784ac58ad4786ff057823d"
+      }
+    ],
+    "mlflow_executed": true
+  },
+  "duration_seconds": 56.1099999999999
+}
