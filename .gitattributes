@@ -1,2 +1,7 @@
 # Preserve measured report bytes: reproduction_check.json records their SHA256.
 experiments/reports/** -text
+
+# Research input hashes must survive Windows core.autocrlf checkouts.
+/configs/experiments.json text eol=lf
+/requirements*.lock.txt text eol=lf
+/requirements-research.txt text eol=lf
