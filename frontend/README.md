@@ -26,3 +26,14 @@ This runs Oxlint, Vitest component tests, and the Vite production build. Individ
 `npm run preview` serves the build for local inspection. For deployment, use the repository's [Docker Compose setup](../compose.yaml), or serve `dist/` with an `/api` reverse proxy. If using a separate API origin, set `VITE_API_BASE_URL` before building.
 
 Use `npm ci` to install exactly the committed lock file. Commit `package-lock.json` together with intentional dependency changes; run the complete check after updating it.
+
+## Browser integration
+
+Start the repository's Docker Compose stack, then run from this directory:
+
+```bash
+npx playwright install --with-deps --only-shell chromium
+npm run test:e2e
+```
+
+The default `E2E_BASE_URL` is `http://127.0.0.1:8080`. These Chromium tests check the real dashboard, historical hour changes, recursive forecast rows, and recovery after a controlled API failure. CI runs them against nginx and FastAPI containers and uploads an HTML report plus failure traces. Vitest continues to run only the component/API-client unit tests.

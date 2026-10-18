@@ -55,11 +55,11 @@ python -m pip install --require-hashes -r requirements-dev.lock.txt
 python -m ruff check backend
 python -m ruff format --check backend
 python -m mypy backend
-python -m pytest --cov=backend --cov-report=term-missing
+python -m pytest --cov=backend --cov-fail-under=90 --cov-report=term-missing
 python -m pip_audit --strict --disable-pip -r requirements-api.lock.txt
 ```
 
-Then run `npm ci` and `npm run check` from `frontend/` for lint, component tests, and a production build. CI runs the backend checks on Linux and Windows and checks the frontend and containers. Coverage requirements are defined in [pyproject.toml](pyproject.toml); current results are available in the [Quality workflow](https://github.com/deleted04user/electricity-demand-forecasting/actions/workflows/quality.yml). See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
+Then run `npm ci` and `npm run check` from `frontend/` for lint, component tests, and a production build. CI enforces at least 90% branch-aware backend coverage on Linux and Windows, checks types and dependencies, and exercises the dashboard in Chromium against the Docker API. Coverage requirements are defined in [pyproject.toml](pyproject.toml); results and machine-readable evidence are available in the [Quality workflow](https://github.com/deleted04user/electricity-demand-forecasting/actions/workflows/quality.yml). See [CONTRIBUTING.md](CONTRIBUTING.md) and [QUALITY_EVIDENCE.md](QUALITY_EVIDENCE.md).
 
 ## Architecture and methodology
 
@@ -72,6 +72,10 @@ flowchart TD
     E --> F[React dashboard]
     D --> G[Evaluation and lineage metadata]
 ```
+
+The application factory in [backend/main.py](backend/main.py) loads an independent [forecast service](backend/service.py) during lifespan startup. Imports do not read the model or workbook. Frozen [settings](backend/settings.py) capture configuration, while a trusted [artifact manifest](models/artifact-manifest.json) checks the model checksum, feature order, and XGBoost runtime before deserialization. Evaluation uses the service directly without importing the API.
+
+Versioned [diagnostics](models/diagnostics.json) are matched to code, data, model, events, and timezone. The service warms them during startup; dashboard requests read prepared results. A changed identity cannot reuse the prior snapshot. Review and commit the model and its trusted manifest together when promoting an artifact.
 
 [backend/features.py](backend/features.py) is shared by training and serving. It builds demand lags from 1 to 336 hours, rolling mean and standard deviation after shifting demand by one hour, calendar and Moroccan public-holiday signals, cyclical time encodings, and weather features. Weather is forward-filled only; missing demand targets are excluded from evaluation.
 
@@ -95,6 +99,7 @@ Interactive request and response schemas are available at `/docs` and `/openapi.
 
 | Endpoint | Purpose |
 | --- | --- |
+| `GET /api/live` | Process liveness, independent of model readiness |
 | `GET /api/health` | Service, model, and data-quality status |
 | `GET /api/meta` | Historical date range, next forecast start, and configuration |
 | `GET /api/overview` | Summary statistics and daily demand series |
@@ -105,7 +110,9 @@ Interactive request and response schemas are available at `/docs` and `/openapi.
 
 For future forecasts, use `future_start` from `/api/meta` as the timezone-naive `start`, and an integer `horizon` from 1 to 168. Optional `temperature` and `humidity` arrays must both contain exactly `horizon` finite numbers; humidity must be within 0–100. Explicit arrays take precedence over a configured weather file. See [the running guide](RUNNING_THE_REACT_DASHBOARD.md) for an executable request.
 
-Responses include an `X-Request-ID` for correlating requests with structured JSON logs on stderr. Request logs record method, path, status, and duration; they omit query strings and request bodies. Unexpected failures include error details for diagnosis.
+If initialization fails, readiness and data/forecast endpoints return HTTP 503 with a controlled error response; `/api/live` remains available for diagnosis. Fix configuration and restart the service. Response schemas reject non-finite model outputs; legitimately undefined statistics are represented as null or omitted observations.
+
+Responses include an `X-Request-ID` for correlating requests with structured JSON logs on stderr. Request logs record method, path, status, and duration; they omit query strings and request bodies. Unexpected failures log server-side error details for diagnosis.
 
 ## Local data configuration
 
@@ -130,12 +137,24 @@ The API metadata, health response, and evaluation manifest identify the bundled 
 ```bash
 python -m backend.evaluate
 python -m backend.evaluate --manifest
+python -m backend.evaluate --diagnostics
 python -m backend.modeling --train --data /path/to/verified_hourly.csv
 ```
 
-The first command runs fixed recursive backtests. `--manifest` refreshes `models/metadata.json` for the configured model and data. Training refuses the bundled workbook and recognized copies. Verify the origin and suitability of any replacement before supplying it with `--data`; accepting its schema does not certify it as real data. The current training procedure requires data spanning the hard-coded pre-2024 training/validation periods and 2024 test period; it preserves candidates and archives the active artifact before a promotion. Promotion requires improved WAPE or RMSE on common holdout rows. Preserve an independent final evaluation period when developing against new data; repeated selection on the same holdout makes that holdout unsuitable as unbiased final evidence.
+The first command runs fixed recursive backtests. `--manifest` refreshes evaluation lineage in `models/metadata.json`; `--diagnostics` refreshes the prepared API diagnostic snapshot. Neither retrains the active model. Training refuses the bundled workbook and recognized copies. Verify the origin and suitability of any replacement before supplying it with `--data`; accepting its schema does not certify it as real data. The current procedure requires the documented pre-2024 training/validation periods and 2024 test period. It preserves candidates, archives the prior artifact, and publishes the trusted manifest with a successful promotion. If manifest publication fails, the prior active model is restored. Promotion requires improved WAPE or RMSE on common rows. Preserve an independent final evaluation period when developing against new data; repeated selection on the same holdout makes that holdout unsuitable as unbiased final evidence.
 
 Only load model artifacts from trusted sources: serialized Python model files can execute code when loaded.
+
+## Reproducible research
+
+The optional research workflow compares predeclared feature ablations on three chronological 2023 folds, repeats selected comparisons with fixed seeds, and reports segmented errors and interval coverage. It records code/data/configuration/lock hashes and can track runs in a local MLflow store. It never promotes the research model or replaces the serving artifact.
+
+```bash
+python -m pip install --require-hashes -r requirements-research.lock.txt
+python -m backend.experiments --config configs/experiments.json --output experiments/reports/my_run --mlflow
+```
+
+Use a new output directory for each run. The checked-in protocol caps fits, threads, and total execution time. Read [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md), the [executed report](experiments/reports/bounded_synthetic_20261018_v2/REPORT.md), and [MODEL_CARD.md](MODEL_CARD.md) for reproduction details and limitations. The 2024 diagnostic period has already informed evaluation/promotion decisions; this study does not relabel it as an untouched independent test.
 
 ## Repository guide
 

@@ -2,6 +2,16 @@
 
 This log records substantive changes from the repository's development history.
 
+## v0.2.0 — 2026-10-18
+
+- Introduced a managed application lifespan, independent forecast-service instances, frozen settings, and a separate liveness endpoint with controlled readiness failures.
+- Verified trusted model checksums and feature/runtime metadata before loading; paired successful promotion with manifest publication and rollback on failure.
+- Prepared diagnostic snapshots identified by their inputs, source code, and runtime versions; kept full backtests outside ordinary request paths.
+- Added finite typed response schemas and honest null handling for undefined statistics, plus explicit per-instance timezone configuration.
+- Added a bounded, reproducible synthetic research workflow with chronological feature ablations, seed repeats, error slices, interval diagnostics, portable provenance, and optional local MLflow tracking.
+- Raised the backend coverage gate to 90%, added real container-backed Chromium tests and generated revision-specific quality evidence, and updated supported CI runtimes.
+- Added a model card, experiment instructions, release notes, quality-evidence map, and regression coverage for the new boundaries.
+
 ## 2026-10-17 — Reproducible setup and quality checks
 
 - Added separate locked Python API and development environments with Python 3.12 as the supported runtime.

@@ -1,6 +1,6 @@
 # Plan for an externally verified score above 80
 
-Prepared 2026-10-17. Status: proposed implementation work, with the existing baseline verified. Target: an evaluator-confirmed score above 80; aim for 85 to allow some margin. The evaluator's weights and eligibility rules are unknown, so engineering checks cannot guarantee a numerical score or an offer.
+Prepared 2026-10-17; implementation updated 2026-10-18. Architecture, research, browser integration and release evidence are implemented. Final release validation and the external assessment are tracked below. Target: an evaluator-confirmed score above 80; aim for 85 to allow some margin. The evaluator's weights and eligibility rules are unknown, so engineering checks cannot guarantee a numerical score or an offer.
 
 ## 1. Establish the correct baseline first
 
@@ -113,3 +113,13 @@ The supplied 62.7 would need more than 17.3 additional points to exceed 80. Its 
 | Verify | New external assessment above 80 | Correct tested revision submitted |
 
 Planning estimate: approximately 4-7 focused engineering days, plus the maintenance period where the buyer requires it. Adjust the sequence using the corrected scan; already-satisfied requirements do not need to be rebuilt.
+
+## Implementation record — 18 October 2026
+
+- Service ownership, managed startup, readiness/liveness, trusted artifact verification, timezone isolation, typed responses and identity-checked prepared diagnostics are implemented and covered by failure-path tests.
+- The bounded research protocol has executed on the synthetic workbook, including three chronological folds, feature ablations, seed repeats, segmented errors, interval diagnostics and local MLflow tracking. The [measured report](experiments/reports/bounded_synthetic_20261018_v2/REPORT.md) and [model card](MODEL_CARD.md) preserve its scope and limitations. The serving model is unchanged.
+- The latest local full backend run passed 172 tests with 95.37% branch-aware coverage. The enforced floor is now 90%. Frontend lint, 17 component tests, build and dependency audit passed; six repeated Chromium scenarios exercised real forecast and recovery behavior.
+- Independent review examined runtime lifecycle and artifacts, research leakage and missing targets, interval arithmetic, and browser/container integration. Review findings were fixed and tested before publication.
+- [QUALITY_EVIDENCE.md](QUALITY_EVIDENCE.md) maps implementation to tests, reports and CI artifacts. The release checks run on Linux/Windows and exercise the Docker stack in Chromium. Final commit-specific CI, fresh-clone validation and the external score must be verified at publication.
+
+Longer maintenance history and any buyer-specific source-volume requirement remain external eligibility factors. This implementation does not manufacture elapsed history, contributors or a score.

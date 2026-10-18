@@ -71,6 +71,10 @@ Invoke-RestMethod http://localhost:8000/api/forecast/future -Method Post -Conten
 
 Install `requirements-dev.lock.txt` for the Python quality tools and tests, then follow [CONTRIBUTING.md](CONTRIBUTING.md). In `frontend/`, `npm run check` runs lint, tests, and the production build. Build output is `frontend/dist/`; `npm run preview` serves it for local inspection.
 
+With Compose running, install Chromium from `frontend/` using `npx playwright install --with-deps --only-shell chromium`, then run `npm run test:e2e`. The browser scenario exercises real historical and recursive forecasts and verifies recovery after a controlled failure.
+
+For reproducible research, install `requirements-research.lock.txt` and follow [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md). Runs have explicit fit/time/thread limits and unique report directories. They never overwrite the served model.
+
 For the optional legacy UI, install `requirements.lock.txt` with `python -m pip install --require-hashes -r requirements.lock.txt` in a separate environment, then run `python -m streamlit run dashboard.py`. That broader environment is separate from the API runtime. Retraining is an intentional artifact-changing operation; follow [the training contract](README.md#evaluation-and-retraining) and provide verified data with `--data`.
 
 ## Troubleshooting
@@ -80,6 +84,8 @@ For the optional legacy UI, install `requirements.lock.txt` with `python -m pip 
 | Docker cannot connect to its engine | Start Docker Desktop or your Docker engine before running Compose. |
 | Port 8000, 5173, or 8080 is in use | Stop the conflicting process or choose another port; update the Vite proxy/API override when changing the backend port. |
 | Dashboard reports an API/network error | Open `/api/health` on port 8000, confirm the backend is running, and check `VITE_API_BASE_URL` and CORS when using separate origins. |
-| Backend fails at startup | Read the reported error; confirm the workbook and trusted model artifact exist and the configured input satisfies its schema. |
+| Backend reports HTTP 503 | Check `/api/live` for process liveness and the structured startup logs for the resource failure. Confirm the workbook, trusted model, and `models/artifact-manifest.json` are present and compatible; correct configuration and restart. |
+| Trusted manifest rejects a newly trained model | Promote through the guarded training command and review/commit the model and manifest together. Avoid replacing a serialized artifact from an unknown source. |
+| Diagnostics need refreshing after a reviewed model/data change | Run `python -m backend.evaluate --diagnostics` and review the new input identity and results. A mismatched snapshot is recomputed during startup. |
 | Forecast returns a validation error | Use `/api/meta`'s exact `future_start`, an integer horizon within 1–168, and complete weather arrays when supplied. |
 | Data-quality status requires attention | Inspect reported gaps, duplicates, and missing values before using the predictions. |
