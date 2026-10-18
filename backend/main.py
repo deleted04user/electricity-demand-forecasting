@@ -67,7 +67,7 @@ def create_app(
             state.error_code = "not_initialized"
 
     application = FastAPI(
-        title="Electricity Demand Forecasting API", version="0.2.0", lifespan=lifespan
+        title="Electricity Demand Forecasting API", version="0.2.1", lifespan=lifespan
     )
     application.state.runtime = state
     application.middleware("http")(log_request)
