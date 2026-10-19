@@ -116,6 +116,10 @@ If initialization fails, readiness and data/forecast endpoints return HTTP 503 w
 
 Responses include an `X-Request-ID` for correlating requests with structured JSON logs on stderr. Request logs record method, path, status, and duration; they omit query strings and request bodies. Unexpected failures log server-side error details for diagnosis.
 
+Optional [error reporting](docs/OBSERVABILITY.md) can aggregate unexpected failures
+without sending request contents. Review the [security policy](SECURITY.md) and
+[threat model](docs/THREAT_MODEL.md) before changing the local deployment boundary.
+
 ## Local data configuration
 
 Copy [.env.example](.env.example) to `.env` and pass `--env-file .env` to Uvicorn. Environment values are read when the backend starts; restart it after changes.
@@ -127,6 +131,7 @@ Copy [.env.example](.env.example) to `.env` and pass `--env-file .env` to Uvicor
 | `WEATHER_FORECAST_PATH` | Optional local future-weather CSV/XLSX |
 | `VERIFIED_EVENTS_PATH` | Optional local CSV/XLSX containing `Date` and `Event` |
 | `CORS_ORIGINS` | Comma-separated allowed browser origins; local Vite origins by default |
+| `SENTRY_DSN`, `SENTRY_ENVIRONMENT` | Optional error destination (empty disables it); environment defaults to `production`; requires the observability extra |
 | `API_PORT`, `FRONTEND_PORT` | Compose host ports; default `8000` and `8080` |
 | `E2E_BASE_URL` | Browser-test URL; default `http://127.0.0.1:8080`; export it in the Playwright shell |
 | `CI` | Set automatically by GitHub Actions; leave unset/empty locally; any nonempty value enables browser-test CI mode |

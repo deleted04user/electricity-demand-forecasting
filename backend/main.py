@@ -8,6 +8,8 @@ from typing import Annotated, Any, cast
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import RequestResponseEndpoint
+from starlette.responses import Response
 
 from .api_models import (
     DemandAnalysisResponse,
@@ -20,6 +22,7 @@ from .api_models import (
     OverviewResponse,
     UnavailableResponse,
 )
+from .error_reporting import ErrorReporter, create_error_reporter
 from .logging_config import log_request, logger
 from .service import ForecastError, ForecastService
 from .settings import Settings
@@ -29,6 +32,7 @@ from .settings import Settings
 class RuntimeState:
     service: ForecastService | None = None
     error_code: str = "not_initialized"
+    reporter: ErrorReporter | None = None
 
 
 def runtime(request: Request) -> ForecastService:
@@ -51,6 +55,11 @@ def create_app(
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         try:
+            state.reporter = create_error_reporter(configuration)
+        except Exception as exc:
+            # Optional telemetry must never prevent forecasting or expose the DSN.
+            logger.warning("error_reporting_unavailable", extra={"error_type": type(exc).__name__})
+        try:
             state.service = service_factory(configuration)
             state.error_code = ""
         except Exception as exc:
@@ -61,16 +70,31 @@ def create_app(
         try:
             yield
         finally:
-            if state.service is not None:
-                state.service.close()
+            try:
+                if state.service is not None:
+                    state.service.close()
+            finally:
                 state.service = None
-            state.error_code = "not_initialized"
+                state.error_code = "not_initialized"
+                if state.reporter is not None:
+                    try:
+                        state.reporter.close()
+                    except Exception as exc:
+                        logger.warning(
+                            "error_reporting_shutdown_failed",
+                            extra={"error_type": type(exc).__name__},
+                        )
+                    finally:
+                        state.reporter = None
+
+    async def request_logging(request: Request, call_next: RequestResponseEndpoint) -> Response:
+        return await log_request(request, call_next, state.reporter)
 
     application = FastAPI(
-        title="Electricity Demand Forecasting API", version="0.2.1", lifespan=lifespan
+        title="Electricity Demand Forecasting API", version="0.3.0", lifespan=lifespan
     )
     application.state.runtime = state
-    application.middleware("http")(log_request)
+    application.middleware("http")(request_logging)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(configuration.cors_origins),

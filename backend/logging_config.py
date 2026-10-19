@@ -10,6 +10,8 @@ from fastapi import Request
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import JSONResponse, Response
 
+from .error_reporting import ErrorReporter
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
@@ -36,7 +38,11 @@ logger.setLevel(logging.INFO)
 logger.propagate = False
 
 
-async def log_request(request: Request, call_next: RequestResponseEndpoint) -> Response:
+async def log_request(
+    request: Request,
+    call_next: RequestResponseEndpoint,
+    reporter: ErrorReporter | None = None,
+) -> Response:
     request_id = uuid4().hex
     request.state.request_id = request_id
     started = time.perf_counter()
@@ -45,6 +51,16 @@ async def log_request(request: Request, call_next: RequestResponseEndpoint) -> R
         response = await call_next(request)
     except Exception as exc:
         logger.exception("request_failed", extra={**fields, "error_type": type(exc).__name__})
+        if reporter is not None:
+            route = getattr(request.scope.get("route"), "path", "<unmatched>")
+            try:
+                reporter.capture_exception(
+                    exc, request_id=request_id, method=request.method, route=route
+                )
+            except Exception as reporting_error:
+                logger.warning(
+                    "error_reporting_failed", extra={"error_type": type(reporting_error).__name__}
+                )
         response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
     response.headers["X-Request-ID"] = request_id
     logger.info(
