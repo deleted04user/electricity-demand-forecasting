@@ -21,6 +21,7 @@ class Settings:
     cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     sentry_dsn: str | None = field(default=None, repr=False)
     sentry_environment: str = "production"
+    max_request_body_bytes: int = 65_536
 
     @property
     def bundled_data_path(self) -> Path:
@@ -28,6 +29,11 @@ class Settings:
 
     def __post_init__(self) -> None:
         ZoneInfo(self.timezone)
+        if (
+            type(self.max_request_body_bytes) is not int
+            or not 1_024 <= self.max_request_body_bytes <= 1_048_576
+        ):
+            raise ValueError("MAX_REQUEST_BODY_BYTES must be an integer between 1024 and 1048576")
 
     @classmethod
     def from_env(cls, root: Path | None = None) -> Settings:
@@ -53,4 +59,5 @@ class Settings:
             sentry_dsn=os.getenv("SENTRY_DSN", "").strip() or None,
             sentry_environment=os.getenv("SENTRY_ENVIRONMENT", "production").strip()
             or "production",
+            max_request_body_bytes=int(os.getenv("MAX_REQUEST_BODY_BYTES", "65536")),
         )

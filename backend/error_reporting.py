@@ -80,7 +80,7 @@ def create_error_reporter(settings: Settings) -> ErrorReporter | None:
         Client(
             dsn=settings.sentry_dsn,
             environment=settings.sentry_environment,
-            release="electricity-demand-forecasting@0.3.0",
+            release="electricity-demand-forecasting@0.3.1",
             server_name="electricity-api",
             debug=False,
             spotlight=False,

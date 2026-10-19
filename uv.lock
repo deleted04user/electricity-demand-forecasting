@@ -550,7 +550,7 @@ wheels = [
 
 [[package]]
 name = "electricity-demand-forecasting"
-version = "0.3.0"
+version = "0.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
@@ -563,6 +563,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "scikit-learn" },
+    { name = "starlette" },
     { name = "uvicorn" },
     { name = "xgboost" },
     { name = "xlrd" },
@@ -643,6 +644,7 @@ requires-dist = [
     { name = "sentry-sdk", marker = "extra == 'observability'", specifier = ">=2.72,<3" },
     { name = "sentry-sdk", marker = "extra == 'research'", specifier = ">=2.72,<3" },
     { name = "sqlalchemy", marker = "extra == 'research'", specifier = ">=2,<3" },
+    { name = "starlette", specifier = ">=1.8,<2" },
     { name = "streamlit", marker = "extra == 'legacy'", specifier = ">=1.28.0" },
     { name = "types-openpyxl", marker = "extra == 'dev'", specifier = ">=3.1,<4" },
     { name = "types-openpyxl", marker = "extra == 'research'", specifier = ">=3.1,<4" },

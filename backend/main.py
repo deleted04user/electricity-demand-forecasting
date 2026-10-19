@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import RequestResponseEndpoint
+from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.responses import Response
 
 from .api_models import (
@@ -91,9 +92,14 @@ def create_app(
         return await log_request(request, call_next, state.reporter)
 
     application = FastAPI(
-        title="Electricity Demand Forecasting API", version="0.3.0", lifespan=lifespan
+        title="Electricity Demand Forecasting API", version="0.3.1", lifespan=lifespan
     )
     application.state.runtime = state
+    # Count actual streamed bytes as well as Content-Length. Keep this inside
+    # request logging and CORS so expected 413 responses retain correlation.
+    application.add_middleware(
+        RequestBodyLimitMiddleware, max_body_size=configuration.max_request_body_bytes
+    )
     application.middleware("http")(request_logging)
     application.add_middleware(
         CORSMiddleware,
@@ -155,7 +161,16 @@ def create_app(
     def meta(service: Service) -> dict[str, Any]:
         return service.meta()
 
-    @application.post("/api/forecast/future", response_model=FutureResponse, responses=unavailable)
+    @application.post(
+        "/api/forecast/future",
+        response_model=FutureResponse,
+        responses={
+            **unavailable,
+            413: {
+                "description": "Request body exceeds the configured byte limit (65536 by default)."
+            },
+        },
+    )
     def future_forecast(service: Service, payload: FutureRequest) -> dict[str, Any]:
         return service.future_forecast(payload)
 

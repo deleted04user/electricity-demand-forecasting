@@ -4,6 +4,8 @@ The default API writes JSON logs to stderr. Every response includes a generated
 `X-Request-ID`, including unexpected HTTP 500 responses; use it to find the
 corresponding `request_failed` and `request_completed` records. Expected HTTP
 validation errors and resource-unavailable responses retain their normal status.
+Oversized-body HTTP 413 responses are expected failures and are not captured as
+unexpected-error events; they retain the API's request ID and allowed CORS headers.
 
 For external aggregation, install the locked optional dependency from the
 repository root:

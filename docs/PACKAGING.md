@@ -34,6 +34,11 @@ Compatible ranges in project metadata alone do not reproduce the trusted model's
 runtime. CI exercises native locked development installs on Linux and Windows,
 pip hash installs for dependency audits, and the pip-installed API Docker image.
 
+Starlette is declared directly with a minimum of 1.8 because the API uses its
+built-in streamed-body limiter. This makes that feature requirement explicit
+rather than depending on an older unconstrained transitive installation. The
+locked Starlette version was already 1.8.0; no package upgrade was needed.
+
 ## Maintain the graph and exports
 
 Update compatible requirements in `pyproject.toml` and their requirement inputs

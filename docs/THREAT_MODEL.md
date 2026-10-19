@@ -33,7 +33,7 @@ their origin is not authenticated by this application.
 | Threat / boundary | Implemented control | Executable evidence / remaining limit |
 | --- | --- | --- |
 | Modified serialized model executes code | Compare SHA-256 against the trusted manifest before deserializing the verified bytes; check runtime/schema/feature order | `test_runtime.py` prevents deserialization on checksum/runtime mismatch. An attacker who controls both model and manifest remains trusted: checksums are not signatures or a sandbox. |
-| Malformed HTTP values or expensive forecast requests | Typed finite inputs, integer horizon 1–168, weather-length/range checks and explicit next-hour start | API/metric contract tests reject invalid, non-finite and overflow values. No per-client request or concurrency quota. |
+| Malformed HTTP values or expensive forecast requests | Default 64 KiB body cap on actual streamed bytes; strict numeric weather arrays capped at 168 items; finite inputs, integer horizon 1–168 and explicit next-hour start | HTTP tests cover exact limits, dishonest/absent Content-Length, early rejection, independent requests/apps, CORS/request IDs and expected 413 behavior. API tests reject invalid/non-finite/overflow values. No per-client request or concurrency quota. |
 | Path traversal / server-side fetching through a request | HTTP requests accept forecast values, not filenames, model paths or remote data URLs | Paths come from local operator configuration. OS file permissions protect them; do not grant configuration access to callers. |
 | Wrong model/data produces misleading results | Fatal resource/schema failures refuse initialization; diagnostic identity covers model, data, code, timezone and events; data-quality flags expose gaps/incomplete model inputs | Runtime identity/cache tests, controlled HTTP 503 for fatal failures, synthetic/unverified provenance in API schemas. Operational readiness does not certify complete data or real-world accuracy; inspect `data_quality` as well as HTTP status. |
 | Evaluation leakage or silent model promotion | Chronological folds, causal features, frozen research protocol, fixed seeds and bounded worker; research does not serialize or promote estimators | Experiment/training tests, repeat reports and active-model hashes. Historically reused 2024 data is explicitly not an independent holdout. |
@@ -45,12 +45,19 @@ their origin is not authenticated by this application.
 ## Deployment responsibilities
 
 Keep the default loopback binding for local use. Before exposing the service to
-other users, put authentication, TLS, request/body/concurrency limits and access
+other users, put authentication, TLS, request/concurrency limits and access
 logging at a reverse proxy; restrict network access and run the service with
 read-only inputs and the minimum OS permissions it needs. Serve one reviewed
 model/manifest pair, keep backups, and replace compromised artifacts from a
 trusted revision before restarting. The backend container runs as a non-root
 user; the Compose setup is not a complete production security boundary.
+
+The API's body cap defaults to 65,536 bytes and `MAX_REQUEST_BODY_BYTES` accepts
+1 KiB–1 MiB. It uses Starlette's built-in body limiter; the manifest declares the
+required Starlette minimum explicitly. Apply an appropriate reverse-proxy body
+cap as another boundary. The browser's 30-second request deadline improves
+recovery from a stalled server; it does not stop server-side work already running
+or substitute for admission control and network timeouts.
 
 Optional Sentry reporting is disabled unless an operator supplies a DSN. Review
 the configured destination and retention before enabling external reporting;

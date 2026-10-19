@@ -1,7 +1,7 @@
 """Finite, documented request and response schemas at the HTTP boundary."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -10,12 +10,15 @@ class ResponseModel(BaseModel):
     model_config = ConfigDict(allow_inf_nan=False)
 
 
+WeatherValue = Annotated[float, Field(strict=True, allow_inf_nan=False)]
+
+
 class FutureRequest(BaseModel):
     model_config = ConfigDict(allow_inf_nan=False, extra="forbid")
     start: datetime
     horizon: int = Field(default=24, ge=1, le=168, strict=True)
-    temperature: list[float] | None = None
-    humidity: list[float] | None = None
+    temperature: list[WeatherValue] | None = Field(default=None, max_length=168)
+    humidity: list[WeatherValue] | None = Field(default=None, max_length=168)
 
 
 class UnavailableResponse(ResponseModel):
