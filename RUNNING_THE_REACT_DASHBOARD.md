@@ -12,6 +12,29 @@ docker compose up --build
 
 Open the [dashboard](http://localhost:8080), [API docs](http://localhost:8000/docs), and [health endpoint](http://localhost:8000/api/health). Nginx forwards the frontend's `/api` requests to FastAPI. Stop the stack with `docker compose down`. To use different host ports, set `FRONTEND_PORT` and `API_PORT` in your shell or root `.env` before starting Compose.
 
+### Startup and resources
+
+Allow two CPU cores and 2 GiB of available RAM as a starting development budget
+for this small bundled model; this is a planning allowance, not a measured minimum
+or a throughput guarantee. Initial image downloads/builds depend on the network
+and build cache. After images are built, CI allows 180 seconds for Compose health
+checks to become ready; a mismatched diagnostic snapshot may take longer than
+the normal prepared-snapshot startup.
+
+Run the same measured smoke check as CI after `docker compose build`:
+
+```bash
+python scripts/container_evidence.py --output tmp/container-evidence.json
+```
+
+It starts both containers, requires ready model/data plus the bundled synthetic
+provenance from the direct and proxied API, loads the dashboard HTML, and records
+time through Compose readiness and one Docker CPU/memory sample. Each Quality
+workflow's `browser-report` artifact includes `container-evidence.json`, tied to
+its actual commit and runner. Startup excludes image builds; the idle sample
+does not measure peak memory or capacity under load. Use that artifact when
+comparing machines rather than treating the timeout as an expected startup time.
+
 ## Windows PowerShell
 
 Open a terminal at the cloned repository root. These commands use the virtual environment's interpreter directly, so PowerShell script-activation policies do not need changing:

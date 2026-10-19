@@ -38,8 +38,8 @@ jobs:
         run: uv sync --locked --extra dev
       - name: Lint and format
         run: |
-          uv run --locked --extra dev python -m ruff check backend scripts/lock_dependencies.py scripts/quality_evidence.py
-          uv run --locked --extra dev python -m ruff format --check backend scripts/lock_dependencies.py scripts/quality_evidence.py
+          uv run --locked --extra dev python -m ruff check backend scripts/lock_dependencies.py scripts/quality_evidence.py scripts/container_evidence.py
+          uv run --locked --extra dev python -m ruff format --check backend scripts/lock_dependencies.py scripts/quality_evidence.py scripts/container_evidence.py
       - name: Check backend types
         run: uv run --locked --extra dev python -m mypy backend
       - name: Test with branch coverage gate
@@ -107,13 +107,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: docker compose config --quiet
       - run: docker compose build
-      - run: docker compose up -d --wait --wait-timeout 180
-      - name: Check dashboard and proxied API
-        run: |
-          curl --fail --retry 3 http://localhost:8080/ -o /dev/null
-          curl --fail http://localhost:8000/api/health
-          curl --fail http://localhost:8080/api/health
-          curl --fail http://localhost:8080/api/meta
+      - name: Verify ready model, dashboard and proxy; measure startup resources
+        run: python scripts/container_evidence.py --output test-results/container-evidence.json
       - name: Install browser test dependencies
         working-directory: frontend
         run: |
@@ -132,6 +127,7 @@ jobs:
           path: |
             frontend/playwright-report/
             frontend/test-results/
+            test-results/container-evidence.json
           if-no-files-found: ignore
           retention-days: 7
       - name: Container logs
