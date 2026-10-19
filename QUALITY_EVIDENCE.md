@@ -13,7 +13,7 @@ Use the commit SHA of the [Quality workflow](https://github.com/deleted04user/el
 | Code checks | `pyproject.toml`, `.github/workflows/quality.yml` | Ruff lint/format, mypy including strict service boundaries, Linux and Windows tests |
 | Coverage | Branch coverage with a 90% floor | CI coverage JSON/XML, JUnit results, and generated `quality-evidence.json` in each backend artifact |
 | Reproducible research | `configs/experiments.json`, `backend/experiments*.py` | Fixed chronological folds, bounded fits/time/threads, seeds and identity hashes, optional local MLflow tracking, protocol tests |
-| Analysis | `experiments/reports/bounded_synthetic_20261019_v4/`, `scripts/audit_reproduction.py` | Portable run/segment/interval tables, repeat study, independent stdlib audit, and `MODEL_CARD.md` with limitations |
+| Analysis | `experiments/reports/bounded_synthetic_20261019_v5/`, `scripts/audit_reproduction.py` | Portable run/segment/interval tables, repeat study, independent stdlib audit, and `MODEL_CARD.md` with limitations |
 | Dependencies | Native `uv.lock`, five generated `requirements*.lock.txt` exports and frontend `package-lock.json` | Locked native installs on Linux/Windows, exact export drift checks, hash-checked pip/Docker installs, all-group vulnerability audits and native-uv Dependabot updates |
 | Packaged application | Root/frontend Dockerfiles, `docker-compose.yml`, nginx proxy | Container build, readiness, dashboard/API smoke requests, real Chromium forecast/error/recovery tests |
 | Deployment measurements | `scripts/container_evidence.py` | JSON readiness/provenance checks through direct/proxy paths; prebuilt-image startup time, image IDs, dirty status and validated idle Docker resource samples |
@@ -48,6 +48,12 @@ passed 25 component tests, lint and its production build, and the live container
 browser scenarios passed. [All three CodeQL analyses](https://github.com/deleted04user/electricity-demand-forecasting/actions/runs/39250696057)
 passed, with no open findings when reviewed. CI evidence identifies the exact
 revision and platform; later release artifacts retain their own tested SHA.
+
+v0.3.1 adds HTTP body limits, strict bounded weather arrays and browser deadlines.
+Its local Windows run passed **225 backend tests at 95.53% branch-aware coverage**;
+frontend lint, **30 tests** and the production build passed. Additional live API
+integration checks reject oversized/ambiguous inputs and verify a subsequent
+valid forecast. Release artifacts record the final CI results separately.
 
 ## Experiment reproduction
 

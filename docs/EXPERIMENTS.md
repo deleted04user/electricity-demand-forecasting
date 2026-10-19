@@ -2,16 +2,17 @@
 
 The experiment command is an offline research tool. It uses only the bundled **synthetic** workbook and never saves, promotes or replaces a model. Serving works without MLflow. The existing production-training prohibition for synthetic data remains in place.
 
-The [executed benchmark report](../experiments/reports/bounded_synthetic_20261019_v4/REPORT.md) and [portable JSON](../experiments/reports/bounded_synthetic_20261019_v4/report.json) record the measured run on 19 October 2026: 28 fits, 33 tracked fold comparisons and 67.140 seconds. The selected full feature set obtained mean 2023 fold WAPE 3.8819%, versus 4.0864% for lags, 5.0384% for weekly naive and 6.1641% for daily naive. These are synthetic one-step comparisons, not operational accuracy claims.
+The [executed benchmark report](../experiments/reports/bounded_synthetic_20261019_v5/REPORT.md) and [portable JSON](../experiments/reports/bounded_synthetic_20261019_v5/report.json) record the measured run on 19 October 2026: 28 fits, 33 tracked fold comparisons and 188.891 seconds. The selected full feature set obtained mean 2023 fold WAPE 3.8819%, versus 4.0864% for lags, 5.0384% for weekly naive and 6.1641% for daily naive. These are synthetic one-step comparisons, not operational accuracy claims.
 
-An [independent repeat](../experiments/reports/bounded_synthetic_20261019_v4_repeat/REPORT.md) completed in 47.281 seconds with identical code/config/data/lock identities. The [reproduction check](../experiments/reports/bounded_synthetic_20261019_v4/reproduction_check.json) records a maximum numeric difference of **0.0**, against tolerance 0.0001, across ablation comparisons, seed variation and historical diagnostics. A separate standard-library audit recomputed coverage directly from CSV boolean counts, verified segment totals/common fold timestamps, checked that both local SQLite databases contain the 33 reported finished MLflow runs, and confirmed the active model hash remained unchanged.
+An [independent repeat](../experiments/reports/bounded_synthetic_20261019_v5_repeat/REPORT.md) completed in 132.032 seconds with identical code/config/data/lock identities. The [reproduction check](../experiments/reports/bounded_synthetic_20261019_v5/reproduction_check.json) records a maximum numeric difference of **0.0**, against tolerance 0.0001, across ablation comparisons, seed variation and historical diagnostics. A separate standard-library audit recomputed coverage directly from CSV boolean counts, verified segment totals/common fold timestamps, checked that both local SQLite databases contain the 33 reported finished MLflow runs, and confirmed the active model hash remained unchanged.
 
-These version-four runs were executed from a clean committed checkout in a fresh
+These version-five runs were executed from clean committed checkouts in a fresh
 native locked research environment. Provenance now includes `pyproject.toml`,
 `uv.lock` and all five pip exports. Existing scientific package versions and
-predictive source remain unchanged; the optional reporting SDK is the only new
-research-environment package. The audit confirms numeric results match the prior
-version-three study exactly. All earlier reports remain immutable historical
+predictive source remain unchanged. The package version and direct Starlette
+minimum changed for HTTP request limiting; the locked package versions did not.
+The audit confirms numeric results match the prior version-four study exactly.
+All earlier reports remain immutable historical
 evidence; their older dependency/provenance bytes are not rewritten.
 
 ## Install a locked environment
@@ -42,7 +43,7 @@ The checked-in auditor uses only Python's standard library, independently of
 pandas/MLflow aggregation:
 
 ```bash
-python scripts/audit_reproduction.py experiments/reports/bounded_synthetic_20261019_v4 experiments/reports/bounded_synthetic_20261019_v4_repeat --historical experiments/reports/bounded_synthetic_20261018_v3
+python scripts/audit_reproduction.py experiments/reports/bounded_synthetic_20261019_v5 experiments/reports/bounded_synthetic_20261019_v5_repeat --historical experiments/reports/bounded_synthetic_20261019_v4
 ```
 
 It checks current input hashes, common fold timestamps, segment totals and
