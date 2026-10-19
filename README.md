@@ -112,6 +112,13 @@ Interactive request and response schemas are available at `/docs` and `/openapi.
 
 For future forecasts, use `future_start` from `/api/meta` as the timezone-naive `start`, and an integer `horizon` from 1 to 168. Optional `temperature` and `humidity` arrays must both contain exactly `horizon` finite numbers; humidity must be within 0–100. Explicit arrays take precedence over a configured weather file. See [the running guide](RUNNING_THE_REACT_DASHBOARD.md) for an executable request.
 
+Weather values must be JSON numbers; booleans and numeric strings are rejected,
+and each array is capped at 168 items. HTTP bodies have a 64 KiB default limit,
+enforced on actual streamed bytes as well as declared length; oversized requests
+return HTTP 413. Normal forecasting payloads fit within that limit. The dashboard
+aborts requests after 30 seconds, including stalled response bodies, and permits
+retry instead of leaving forecasting disabled indefinitely.
+
 If initialization fails, readiness and data/forecast endpoints return HTTP 503 with a controlled error response; `/api/live` remains available for diagnosis. Fix configuration and restart the service. Response schemas reject non-finite model outputs; legitimately undefined statistics are represented as null or omitted observations.
 
 Responses include an `X-Request-ID` for correlating requests with structured JSON logs on stderr. Request logs record method, path, status, and duration; they omit query strings and request bodies. Unexpected failures log server-side error details for diagnosis.
@@ -131,6 +138,7 @@ Copy [.env.example](.env.example) to `.env` and pass `--env-file .env` to Uvicor
 | `WEATHER_FORECAST_PATH` | Optional local future-weather CSV/XLSX |
 | `VERIFIED_EVENTS_PATH` | Optional local CSV/XLSX containing `Date` and `Event` |
 | `CORS_ORIGINS` | Comma-separated allowed browser origins; local Vite origins by default |
+| `MAX_REQUEST_BODY_BYTES` | HTTP body cap; default `65536` bytes, configurable from `1024` to `1048576` |
 | `SENTRY_DSN`, `SENTRY_ENVIRONMENT` | Optional error destination (empty disables it); environment defaults to `production`; requires the observability extra |
 | `API_PORT`, `FRONTEND_PORT` | Compose host ports; default `8000` and `8080` |
 | `E2E_BASE_URL` | Browser-test URL; default `http://127.0.0.1:8080`; export it in the Playwright shell |

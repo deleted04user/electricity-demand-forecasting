@@ -14,11 +14,28 @@ async function readResponse(res) {
   return body;
 }
 
+async function request(url, options = {}) {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, 30_000);
+  try {
+    // Keep the deadline active while reading JSON as well as waiting for headers.
+    return await readResponse(await fetch(url, { ...options, signal: controller.signal }));
+  } catch (error) {
+    if (timedOut) throw new Error("Backend request timed out after 30 seconds. Please retry.");
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function get(path, params = {}) {
   const url = new URL(BASE_URL + path);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url);
-  return readResponse(res);
+  return request(url);
 }
 
 export const api = {
@@ -27,11 +44,10 @@ export const api = {
   modelPerformance: () => get("/api/model-performance"),
   forecast: (date, hour) => get("/api/forecast", { date, hour }),
   futureForecast: async (start, horizon) => {
-    const res = await fetch(BASE_URL + "/api/forecast/future", {
+    return request(BASE_URL + "/api/forecast/future", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ start, horizon }),
     });
-    return readResponse(res);
   },
   meta: () => get("/api/meta"),
 };

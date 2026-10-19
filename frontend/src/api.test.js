@@ -10,8 +10,62 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
+});
+
+describe("bounded API requests", () => {
+  function abortable(signal) {
+    return new Promise((_resolve, reject) => {
+      signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+    });
+  }
+
+  it("aborts a request that never receives response headers", async () => {
+    vi.useFakeTimers();
+    fetch.mockImplementation((_url, { signal }) => abortable(signal));
+    const result = api.meta().catch((error) => error.message);
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(await result).toBe("Backend request timed out after 30 seconds. Please retry.");
+    expect(fetch.mock.calls[0][1].signal.aborted).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("also aborts a stalled response body after headers arrive", async () => {
+    vi.useFakeTimers();
+    fetch.mockImplementation((_url, { signal }) => Promise.resolve({ ok: true, json: () => abortable(signal) }));
+    const result = api.overview().catch((error) => error.message);
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(await result).toContain("timed out after 30 seconds");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("clears deadlines after successful responses and ordinary backend errors", async () => {
+    vi.useFakeTimers();
+    fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ ready: true }) });
+    expect(await api.meta()).toEqual({ ready: true });
+    expect(vi.getTimerCount()).toBe(0);
+    fetch.mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({ detail: "Unavailable" }) });
+    await expect(api.meta()).rejects.toThrow("Unavailable");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("keeps simultaneous request deadlines independent", async () => {
+    vi.useFakeTimers();
+    let resolveSecond;
+    fetch.mockImplementationOnce((_url, { signal }) => abortable(signal));
+    const first = api.meta().catch((error) => error.message);
+    await vi.advanceTimersByTimeAsync(15_000);
+    fetch.mockImplementationOnce(() => new Promise((resolve) => { resolveSecond = resolve; }));
+    const second = api.overview();
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(await first).toContain("timed out");
+    expect(fetch.mock.calls[1][1].signal.aborted).toBe(false);
+    resolveSecond({ ok: true, json: async () => ({ ready: true }) });
+    expect(await second).toEqual({ ready: true });
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });
 
 describe("API deployment and request handling", () => {

@@ -119,4 +119,6 @@ For the optional legacy UI, install `requirements.lock.txt` with `python -m pip 
 | Trusted manifest rejects a newly trained model | Promote through the guarded training command and review/commit the model and manifest together. Avoid replacing a serialized artifact from an unknown source. |
 | Diagnostics need refreshing after a reviewed model/data change | Run `python -m backend.evaluate --diagnostics` and review the new input identity and results. A mismatched snapshot is recomputed during startup. |
 | Forecast returns a validation error | Use `/api/meta`'s exact `future_start`, an integer horizon within 1–168, and complete weather arrays when supplied. |
+| API returns HTTP 413 | Keep request bodies within `MAX_REQUEST_BODY_BYTES` (default 64 KiB); weather arrays accept at most 168 numeric values each. The setting is captured at backend startup. |
+| Dashboard says the backend request timed out | Requests have a 30-second deadline through response-body parsing. Check backend readiness/logs and network access, then retry; the future-forecast button becomes available again. |
 | Data-quality status requires attention | Inspect reported gaps, duplicates, and missing values before using the predictions. |

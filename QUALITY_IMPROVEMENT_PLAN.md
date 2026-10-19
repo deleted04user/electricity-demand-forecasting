@@ -28,6 +28,14 @@ engineering evidence. Use any new genuine deductions to choose further work.
 The detailed original plan below records the earlier baseline and completed
 architecture/research work; its descriptions of former gaps are historical.
 
+An additional pass after v0.3.0 found two availability gaps: no API body cap and
+no browser request deadline. v0.3.1 adds the existing framework's streamed-body
+limiter, bounded strict weather arrays, and a deadline covering response headers
+and JSON body reads. Regression checks exercise absent/dishonest lengths, exact
+boundaries, per-request/app isolation, expected 413 telemetry, stalled bodies,
+concurrent requests and forecast-button recovery. These improve concrete failure
+behavior; they do not establish a particular external score gain.
+
 ## Original plan — 17–18 October 2026
 
 Prepared 2026-10-17; implementation updated 2026-10-18. Architecture, research, browser integration and release evidence are implemented. Final release validation and the external assessment are tracked below. Target: an evaluator-confirmed score above 80; aim for 85 to allow some margin. The evaluator's weights and eligibility rules are unknown, so engineering checks cannot guarantee a numerical score or an offer.

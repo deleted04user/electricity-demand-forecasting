@@ -2,6 +2,13 @@
 
 This log records substantive changes from the repository's development history.
 
+## v0.3.1 — 2026-10-19
+
+- Limit HTTP request bodies to 64 KiB by default using Starlette's built-in limiter, including chunked bodies and misleading lengths; retain request IDs/CORS on expected 413 responses. Add bounded startup configuration and declare the required Starlette minimum explicitly.
+- Reject boolean/string weather values and cap each weather array at 168 entries while accepting integer and floating-point JSON numbers.
+- Abort browser requests after 30 seconds through response-body parsing, clear deadlines on completion, isolate concurrent requests and restore forecast controls after a timeout.
+- Add request-limit, numeric-input and stalled-network regressions; preserve the served model and resolved dependency versions.
+
 ## v0.3.0 — 2026-10-19
 
 - Adopt a native `uv.lock` with five verified pip hash exports, preserving existing package versions; exercise locked installs on Linux/Windows and audit the optional reporting environment too.

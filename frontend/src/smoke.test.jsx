@@ -7,7 +7,7 @@ import ModelPerformance from "./pages/ModelPerformance";
 import Forecast from "./pages/Forecast";
 import App from "./App";
 
-afterEach(() => cleanup());
+afterEach(() => { vi.useRealTimers(); cleanup(); });
 
 function mockFetchFor(pathToPayload) {
   global.fetch = vi.fn((url) => {
@@ -118,6 +118,31 @@ it("shows a future API error", async () => {
   await waitFor(() => expect(button.disabled).toBe(false));
   fireEvent.click(button);
   expect(await screen.findByText("not mocked")).toBeTruthy();
+});
+
+it("re-enables forecasting with a useful error when a backend request stalls", async () => {
+  global.fetch = vi.fn((url, options) => {
+    const path = new URL(url).pathname;
+    if (path === "/api/forecast/future") {
+      return new Promise((_resolve, reject) => {
+        options.signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+      });
+    }
+    const payload = path === "/api/meta"
+      ? { ...mockPayloads.meta, future_start: "2025-01-01 00:00:00" }
+      : mockPayloads.forecast;
+    return Promise.resolve({ ok: true, json: async () => payload });
+  });
+  render(<Forecast />);
+  await screen.findByText("Actual Demand");
+  const button = screen.getByRole("button", { name: "Generate future forecast" });
+  vi.useFakeTimers();
+  fireEvent.click(button);
+  expect(button.disabled).toBe(true);
+  await act(async () => { await vi.advanceTimersByTimeAsync(30_000); });
+  expect(screen.getByText("Backend request timed out after 30 seconds. Please retry.")).toBeTruthy();
+  expect(button.disabled).toBe(false);
+  expect(button.textContent).toBe("Generate future forecast");
 });
 
 it("keeps the latest selected hour when historical requests finish out of order", async () => {
