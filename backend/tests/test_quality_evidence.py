@@ -1,5 +1,6 @@
 """Release evidence must fail closed for failed tests or invalid coverage reports."""
 
+import hashlib
 import json
 
 import pytest
@@ -42,6 +43,7 @@ def test_passing_evidence_uses_report_counts_and_identifies_the_tested_revision(
     (tmp_path / "models").mkdir()
     (tmp_path / "models/electricity_xgb_prediction_model.pkl").write_bytes(b"test artifact")
     (tmp_path / "requirements-api.lock.txt").write_text("example==1\n")
+    (tmp_path / "uv.lock").write_bytes(b"version = 1\n")
     monkeypatch.setattr(quality_evidence, "ROOT", tmp_path)
     monkeypatch.setattr(
         quality_evidence, "git", lambda *args: "a" * 40 if args[0] == "rev-parse" else ""
@@ -59,3 +61,6 @@ def test_passing_evidence_uses_report_counts_and_identifies_the_tested_revision(
     assert report["backend"]["tests"] == 12 and report["backend"]["skipped"] == 1
     assert report["backend"]["coverage_percent"] == 95.5
     assert len(report["dependency_locks_sha256"]["requirements-api.lock.txt"]) == 64
+    assert (
+        report["dependency_locks_sha256"]["uv.lock"] == hashlib.sha256(b"version = 1\n").hexdigest()
+    )

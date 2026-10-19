@@ -1,4 +1,5 @@
 -r requirements-api.txt
+-r requirements-observability.txt
 pytest>=8,<10
 pytest-cov>=6,<8
 ruff>=0.14,<1

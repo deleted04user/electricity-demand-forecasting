@@ -180,6 +180,8 @@ def provenance(config_path: Path, *, root: Path = ROOT) -> dict[str, Any]:
             root / "backend/modeling.py",
             *root.glob("requirements*.lock.txt"),
             root / "requirements-research.txt",
+            root / "pyproject.toml",
+            root / "uv.lock",
         }
     )
     hashes = {

@@ -37,20 +37,34 @@ Settings, artifact, request/response, service, application, and evaluation bound
 
 ## Dependencies
 
-`requirements-api.txt`, `requirements-dev.txt`, and `requirements.txt` are maintainer inputs. Commit their corresponding `.lock.txt` files when updating dependencies. Consumers install from the locks with pip and `--require-hashes`. Generate locks with uv for Python 3.12:
+`pyproject.toml` declares the compatible dependency groups; semantic tests keep
+the `requirements*.txt` declarations aligned. The native `uv.lock` resolves all
+groups for Python 3.12. Five pip-compatible hash exports support API, development,
+research, legacy and optional observability installations. Use uv 0.13.0 to
+maintain them:
 
 ```bash
-uv pip compile requirements-api.txt --python-version 3.12 --universal --generate-hashes -o requirements-api.lock.txt
-uv pip compile requirements-dev.txt --python-version 3.12 --universal --generate-hashes -c requirements-api.lock.txt -o requirements-dev.lock.txt
-uv pip compile requirements.txt --python-version 3.12 --universal --generate-hashes -c requirements-api.lock.txt -o requirements.lock.txt
-uv pip compile requirements-research.txt --python-version 3.12 --universal --generate-hashes -c requirements-dev.lock.txt -o requirements-research.lock.txt
+uv lock
+python scripts/lock_dependencies.py --write
+uv lock --check
+python scripts/lock_dependencies.py --check
 ```
 
-Run quality and vulnerability checks after regenerating. The optional notebook/Streamlit dependencies in `requirements.lock.txt` are separate from the API environment.
+Use `uv lock --upgrade-package NAME` for an intentional package update. Commit
+`pyproject.toml`, requirement declarations, `uv.lock` and affected exports together,
+then run quality and vulnerability checks. Never change a pin or hash directly
+in an export. `uv sync --locked --extra dev` installs the development environment;
+`uv run --locked --extra dev python -m pytest` uses that exact environment. Pip
+consumers and Docker continue using `--require-hashes`. The notebook/Streamlit
+dependencies in `requirements.lock.txt` remain separate from the API environment.
 
 The research lock includes development tools and optional local experiment tracking. Follow [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) before running experiments. Keep research artifacts separate from production promotion, declare the protocol before comparing results, and retain the code/config/data provenance attached to each report.
 
 Use `npm ci` with the committed frontend lock. Include both `frontend/package.json` and `frontend/package-lock.json` for dependency changes. Dependabot proposes updates through pull requests; review and validate them before merging.
+
+Dependabot targets the native `uv` ecosystem. For a Python update PR, align any
+changed direct requirement declarations and regenerate the pip exports before
+merging; the export/metadata guards intentionally fail until those files agree.
 
 ## Data and model integrity
 

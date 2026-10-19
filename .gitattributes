@@ -5,3 +5,5 @@ experiments/reports/** -text
 /configs/experiments.json text eol=lf
 /requirements*.lock.txt text eol=lf
 /requirements-research.txt text eol=lf
+/pyproject.toml text eol=lf
+/uv.lock text eol=lf

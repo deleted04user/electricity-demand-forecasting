@@ -33,6 +33,7 @@ def requirements(path: Path) -> set[Requirement]:
         ("dev", "requirements-dev.txt"),
         ("research", "requirements-research.txt"),
         ("legacy", "requirements.txt"),
+        ("observability", "requirements-observability.txt"),
     ],
 )
 def test_pep621_dependency_sets_match_existing_installation_inputs(extra, filename):

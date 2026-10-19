@@ -181,6 +181,21 @@ def test_provenance_is_portable_and_changes_with_source_not_user_file(tmp_path, 
     assert protocol.provenance(config, root=tmp_path)["git_revision"] is None
 
 
+@pytest.mark.parametrize("filename", ["uv.lock", "pyproject.toml"])
+def test_research_rejects_native_dependency_manifest_changes(tmp_path, monkeypatch, filename):
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data/electricity_demand_2025.xlsx").write_bytes(b"data")
+    manifest = tmp_path / filename
+    manifest.write_text("original", encoding="utf-8")
+    config = write_config(tmp_path, protocol.load_config())
+    monkeypatch.setattr(protocol.subprocess, "check_output", lambda *args, **kwargs: "")
+    record = protocol.provenance(config, root=tmp_path)
+    assert record["source_and_lock_sha256"][filename] == protocol.sha256(manifest)
+    manifest.write_text("changed", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="source or lock changed"):
+        protocol.verify_provenance(record, config, root=tmp_path)
+
+
 def test_source_hash_normalizes_only_python_newlines_and_detects_config_data_changes(tmp_path):
     script = tmp_path / "test.py"
     script.write_bytes(b"first\r\nsecond\r\n")

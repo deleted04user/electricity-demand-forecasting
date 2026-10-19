@@ -1,0 +1,3 @@
+# Optional external error reporting; the base API runs without this SDK.
+-r requirements-api.txt
+sentry-sdk>=2.72,<3

@@ -38,7 +38,8 @@ def generate(coverage_path: Path, junit_path: Path, minimum_coverage: float = 90
         raise ValueError("Release evidence requires executed tests with zero failures and errors")
     locks = {
         path.name: hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in sorted(ROOT.glob("requirements*.lock.txt"))
+        for path in sorted({*ROOT.glob("requirements*.lock.txt"), ROOT / "uv.lock"})
+        if path.is_file()
     }
     return {
         "schema_version": 1,

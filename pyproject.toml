@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "electricity-demand-forecasting"
-version = "0.2.1"
+version = "0.3.0"
 description = "Hourly electricity-demand forecasting research and a FastAPI backend"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["electricity", "demand", "forecasting", "xgboost", "fastapi"]
-# requirements*.txt remain the lock-generation inputs. Keep these discoverable
-# metadata declarations in sync; test_project_metadata.py checks the full sets.
+# uv.lock resolves these dependency declarations. Requirements files retain
+# pip-compatible inputs/exports; test_project_metadata.py checks the full sets.
 dependencies = [
     "pandas>=1.5.0",
     "numpy>=1.24.0",
@@ -31,6 +31,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "sentry-sdk>=2.72,<3",
     "pytest>=8,<10",
     "pytest-cov>=6,<8",
     "ruff>=0.14,<1",
@@ -43,6 +44,7 @@ dev = [
 ]
 # Research includes the development tools, matching requirements-research.txt.
 research = [
+    "sentry-sdk>=2.72,<3",
     "pytest>=8,<10",
     "pytest-cov>=6,<8",
     "ruff>=0.14,<1",
@@ -64,6 +66,7 @@ legacy = [
     "plotly>=5.17.0",
     "scipy>=1.11.0",
 ]
+observability = ["sentry-sdk>=2.72,<3"]
 
 [project.urls]
 Repository = "https://github.com/deleted04user/electricity-demand-forecasting"
@@ -116,5 +119,5 @@ module = ["joblib", "sklearn.*", "holidays.*", "xgboost.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["backend.settings", "backend.artifacts", "backend.api_models", "backend.service", "backend.diagnostics", "backend.main", "backend.evaluate"]
+module = ["backend.settings", "backend.artifacts", "backend.api_models", "backend.service", "backend.diagnostics", "backend.main", "backend.evaluate", "backend.error_reporting"]
 strict = true
