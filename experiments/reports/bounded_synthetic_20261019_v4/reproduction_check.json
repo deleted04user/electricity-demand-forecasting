@@ -1,0 +1,87 @@
+{
+  "status": "passed",
+  "method": "independent stdlib JSON/csv/math/sqlite3 checks; no pandas or MLflow imports",
+  "runs": [
+    {
+      "path": "experiments/reports/bounded_synthetic_20261019_v4",
+      "run_id": "20261019T121541Z_919e8b5b",
+      "report_sha256": "e161905136afccde1a62b1279e3da974605ef7694254bcbdb9f59d7ce8992c6d",
+      "portable_files_sha256": {
+        "report.json": "e161905136afccde1a62b1279e3da974605ef7694254bcbdb9f59d7ce8992c6d",
+        "runs.csv": "a4320e710e674075e7a0ef5bf82d25f3167cff34642a6b3928c76884e959bc76",
+        "segmented_errors.csv": "d6956be9ce8b96be84146e1b19551eff13e43d4a223180df113fa91eabf2da5e",
+        "interval_predictions.csv": "b1e7f062c70e573a1a8a7fd397e4848235e2586e789ea12bfb2366352fc4f940",
+        "REPORT.md": "59d2a6f9f10055af7dcbc16406d3a682bdfedb6e3878fd3fbb938f079733e410"
+      }
+    },
+    {
+      "path": "experiments/reports/bounded_synthetic_20261019_v4_repeat",
+      "run_id": "20261019T121701Z_be87a1ce",
+      "report_sha256": "cb59e19133aae966b9b48c391ce19ea60d5eda9d4881c7d80f96547e50905b86",
+      "portable_files_sha256": {
+        "report.json": "cb59e19133aae966b9b48c391ce19ea60d5eda9d4881c7d80f96547e50905b86",
+        "runs.csv": "d2e20a666f67dafb70b15d660e69561cb76e514a213ec642a7aacca7501b27b9",
+        "segmented_errors.csv": "d6956be9ce8b96be84146e1b19551eff13e43d4a223180df113fa91eabf2da5e",
+        "interval_predictions.csv": "b1e7f062c70e573a1a8a7fd397e4848235e2586e789ea12bfb2366352fc4f940",
+        "REPORT.md": "4a65e89c163e8165630ee79dbdaf3cab31a3455d89ee2ed533b47a3ebe852c85"
+      }
+    }
+  ],
+  "source_manifest_sha256": "37b890ac426e30e1268e107d6db6d2eb2df3e4fa3f1f86db11bb87a0a4929877",
+  "tolerance_absolute": 0.0001,
+  "maximum_metric_difference": 0,
+  "independent_interval_counts": [
+    {
+      "horizon_hours": 1,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 6,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 24,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 72,
+      "covered": 11,
+      "scored_origins": 11,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 168,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    }
+  ],
+  "common_fold_timestamp_checks": "passed",
+  "segment_partition_counts": "passed",
+  "csv_metric_checks": "passed",
+  "sqlite_metrics_checks": "passed",
+  "native_lock_and_current_input_hashes": "passed",
+  "active_artifact_unchanged": true,
+  "mlflow_local_database_finished_runs": [
+    33,
+    33
+  ],
+  "historical_run_comparison": {
+    "path": "experiments/reports/bounded_synthetic_20261018_v3",
+    "report_sha256": "8b7340f4ef17dba436e9465959e883fcf0ae630f3824546e8444f8a37206af89",
+    "maximum_metric_difference": 0,
+    "scientific_prediction_source_hashes_unchanged": true,
+    "note": "Native lock adoption, optional error-reporting dependency and expanded provenance; predictive code/config and resolved scientific package versions retained"
+  }
+}

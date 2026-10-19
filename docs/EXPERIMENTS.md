@@ -2,15 +2,29 @@
 
 The experiment command is an offline research tool. It uses only the bundled **synthetic** workbook and never saves, promotes or replaces a model. Serving works without MLflow. The existing production-training prohibition for synthetic data remains in place.
 
-The [executed benchmark report](../experiments/reports/bounded_synthetic_20261018_v3/REPORT.md) and [portable JSON](../experiments/reports/bounded_synthetic_20261018_v3/report.json) record the measured run on 18 October 2026: 28 fits, 33 tracked fold comparisons and 56.11 seconds. The selected full feature set obtained mean 2023 fold WAPE 3.8819%, versus 4.0864% for lags, 5.0384% for weekly naive and 6.1641% for daily naive. These are synthetic one-step comparisons, not operational accuracy claims.
+The [executed benchmark report](../experiments/reports/bounded_synthetic_20261019_v4/REPORT.md) and [portable JSON](../experiments/reports/bounded_synthetic_20261019_v4/report.json) record the measured run on 19 October 2026: 28 fits, 33 tracked fold comparisons and 67.140 seconds. The selected full feature set obtained mean 2023 fold WAPE 3.8819%, versus 4.0864% for lags, 5.0384% for weekly naive and 6.1641% for daily naive. These are synthetic one-step comparisons, not operational accuracy claims.
 
-An [independent repeat](../experiments/reports/bounded_synthetic_20261018_v3_repeat/REPORT.md) completed in 56.515 seconds with identical code/config/data/lock identities. The [reproduction check](../experiments/reports/bounded_synthetic_20261018_v3/reproduction_check.json) records a maximum numeric difference of **0.0**, against tolerance 0.0001, across ablation comparisons, seed variation and historical diagnostics. A separate standard-library audit recomputed coverage directly from CSV boolean counts, verified segment totals/common fold timestamps, checked that both local SQLite databases contain the 33 reported finished MLflow runs, and confirmed the active model hash remained unchanged.
+An [independent repeat](../experiments/reports/bounded_synthetic_20261019_v4_repeat/REPORT.md) completed in 47.281 seconds with identical code/config/data/lock identities. The [reproduction check](../experiments/reports/bounded_synthetic_20261019_v4/reproduction_check.json) records a maximum numeric difference of **0.0**, against tolerance 0.0001, across ablation comparisons, seed variation and historical diagnostics. A separate standard-library audit recomputed coverage directly from CSV boolean counts, verified segment totals/common fold timestamps, checked that both local SQLite databases contain the 33 reported finished MLflow runs, and confirmed the active model hash remained unchanged.
 
-These version-three runs capture the current dependency-lock hashes after the API's Pydantic 2 requirement became explicit in standard package metadata. Every resolved version, platform marker and dependency artifact hash was preserved. The audit also confirms numeric results and scientific Python source hashes match the earlier version-two study, which remains immutable historical evidence. Current-code/config/data/lock provenance was checked again after both new runs.
+These version-four runs were executed from a clean committed checkout in a fresh
+native locked research environment. Provenance now includes `pyproject.toml`,
+`uv.lock` and all five pip exports. Existing scientific package versions and
+predictive source remain unchanged; the optional reporting SDK is the only new
+research-environment package. The audit confirms numeric results match the prior
+version-three study exactly. All earlier reports remain immutable historical
+evidence; their older dependency/provenance bytes are not rewritten.
 
 ## Install a locked environment
 
 From the repository root, with Python 3.12 and `uv` installed:
+
+```bash
+uv sync --locked --extra research
+uv run --locked --extra research python -m backend.experiments --output experiments/reports/my-reproduction --mlflow
+```
+
+Alternatively, install the pip-compatible research hash export in a separate
+environment:
 
 ```powershell
 uv venv --python 3.12 .venv-research
@@ -21,6 +35,24 @@ uv pip sync --python .venv-research/Scripts/python.exe --require-hashes requirem
 On Linux/macOS use `.venv-research/bin/python` in place of `.venv-research/Scripts/python.exe`. A standard Python virtual environment and `python -m pip install --require-hashes -r requirements-research.lock.txt` work too. The lock includes API/development requirements and the small MLflow client distribution plus SQLite dependencies; it does not install the full MLflow serving stack.
 
 The output must be a **new** directory below `experiments/reports`; existing runs cannot be overwritten through the public command. Omit `--mlflow` to create the same portable JSON/CSV reports without tracking; `requirements-dev.lock.txt` is sufficient for that mode. Offline describes execution after dependencies have been installed; package installation needs a package index or a local wheel cache.
+
+## Independently audit the portable reports
+
+The checked-in auditor uses only Python's standard library, independently of
+pandas/MLflow aggregation:
+
+```bash
+python scripts/audit_reproduction.py experiments/reports/bounded_synthetic_20261019_v4 experiments/reports/bounded_synthetic_20261019_v4_repeat --historical experiments/reports/bounded_synthetic_20261018_v3
+```
+
+It checks current input hashes, common fold timestamps, segment totals and
+weighted errors, actual/interval CSV counts, and repeated numeric results at the
+declared tolerance. Local SQLite databases are intentionally not committed. The
+portable audit labels those checks unavailable when the databases are absent;
+add `--require-local-tracking` when auditing the original local runs to require
+their 33 finished runs and matching IDs/metrics. `--output NEW_PATH` exclusively
+creates a new proof, preserving measured reports and existing proofs. The
+committed proof records the original local database checks and raw report hashes.
 
 ## Predeclared protocol
 

@@ -169,7 +169,7 @@ python -m pip install --require-hashes -r requirements-research.lock.txt
 python -m backend.experiments --config configs/experiments.json --output experiments/reports/my_run --mlflow
 ```
 
-Use a new output directory for each run. The checked-in protocol caps fits, threads, and total execution time. Read [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md), the [executed report](experiments/reports/bounded_synthetic_20261018_v3/REPORT.md), and [MODEL_CARD.md](MODEL_CARD.md) for reproduction details and limitations. The 2024 diagnostic period has already informed evaluation/promotion decisions; this study does not relabel it as an untouched independent test.
+Use a new output directory for each run. The checked-in protocol caps fits, threads, and total execution time. Read [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md), the [executed report](experiments/reports/bounded_synthetic_20261019_v4/REPORT.md), and [MODEL_CARD.md](MODEL_CARD.md) for reproduction details and limitations. The 2024 diagnostic period has already informed evaluation/promotion decisions; this study does not relabel it as an untouched independent test.
 
 ## Optional Streamlit dashboard
 

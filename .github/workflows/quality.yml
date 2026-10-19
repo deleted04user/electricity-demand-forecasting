@@ -38,12 +38,14 @@ jobs:
         run: uv sync --locked --extra dev
       - name: Lint and format
         run: |
-          uv run --locked --extra dev python -m ruff check backend scripts/lock_dependencies.py scripts/quality_evidence.py scripts/container_evidence.py
-          uv run --locked --extra dev python -m ruff format --check backend scripts/lock_dependencies.py scripts/quality_evidence.py scripts/container_evidence.py
+          uv run --locked --extra dev python -m ruff check backend scripts/lock_dependencies.py scripts/quality_evidence.py scripts/container_evidence.py scripts/audit_reproduction.py
+          uv run --locked --extra dev python -m ruff format --check backend scripts/lock_dependencies.py scripts/quality_evidence.py scripts/container_evidence.py scripts/audit_reproduction.py
       - name: Check backend types
         run: uv run --locked --extra dev python -m mypy backend
       - name: Test with branch coverage gate
         run: uv run --locked --extra dev python -m pytest --cov=backend --cov-branch --cov-fail-under=90 --cov-report=term-missing --cov-report=xml --cov-report=json --junitxml=test-results/backend.xml -q
+      - name: Independently verify the portable research repeat and current input hashes
+        run: uv run --locked --extra dev python scripts/audit_reproduction.py experiments/reports/bounded_synthetic_20261019_v4 experiments/reports/bounded_synthetic_20261019_v4_repeat --historical experiments/reports/bounded_synthetic_20261018_v3 --output test-results/reproduction-audit.json
       - name: Record tested revision and artifact fingerprints
         run: python scripts/quality_evidence.py --coverage coverage.json --junit test-results/backend.xml --output quality-evidence.json
       - uses: actions/upload-artifact@v7.0.2
@@ -54,6 +56,7 @@ jobs:
             coverage.xml
             coverage.json
             test-results/backend.xml
+            test-results/reproduction-audit.json
             quality-evidence.json
           if-no-files-found: ignore
 
