@@ -11,6 +11,28 @@ function futureTable(page) {
   })
 }
 
+test('API rejects oversized and ambiguous inputs and remains ready for a valid forecast', async ({ request }) => {
+  const oversized = await request.post('/api/forecast/future', {
+    data: { padding: 'oversized-client-input'.repeat(4096) },
+  })
+  expect(oversized.status()).toBe(413)
+  expect(oversized.headers()['x-request-id']).toMatch(/^[0-9a-f]{32}$/)
+  expect(await oversized.text()).not.toContain('oversized-client-input')
+
+  const meta = await (await request.get('/api/meta')).json()
+  const ambiguous = await request.post('/api/forecast/future', {
+    data: { start: meta.future_start, horizon: 1, temperature: [true], humidity: [50] },
+  })
+  expect(ambiguous.status()).toBe(422)
+
+  const valid = await request.post('/api/forecast/future', {
+    data: { start: meta.future_start, horizon: 1 },
+  })
+  expect(valid.ok()).toBeTruthy()
+  expect((await valid.json()).forecast).toHaveLength(1)
+  expect(await (await request.get('/api/live')).json()).toEqual({ status: 'alive' })
+})
+
 test('dashboard renders real historical and recursive forecasts', async ({ page, request }) => {
   const browserErrors = []
   page.on('pageerror', error => browserErrors.push(error.message))
