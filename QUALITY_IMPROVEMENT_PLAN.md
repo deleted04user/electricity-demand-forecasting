@@ -1,4 +1,34 @@
-# Plan for an externally verified score above 80
+# Quality improvement plan and assessment evidence
+
+## Current round — 19 October 2026
+
+The new public assessment displays **80 (B)** and estimates $120, subject to
+review. It does not expose the analyzed commit or an authoritative decimal
+score. This round aims to improve the documented weak dimensions as far as the
+project's real scope supports; no implementation can guarantee a score near 100.
+
+| Finding | Focused response | Acceptance evidence |
+| --- | --- | --- |
+| Python lockfiles not detected | Adopt a native `uv.lock` as the actual resolved graph; generate all five hash exports from it | Byte-for-byte export guard, native locked installs on Linux/Windows, pip-installed Docker API and audits of every export |
+| Thin analytics-page coverage | Test rendered demand/correlation values, real diagnostic baseline/horizon rows, HTTP/network/JSON failures | Full frontend lint, 25 component tests and production build, plus existing live-browser scenarios |
+| Unexpected failures only in local logs | Add optional lifespan-owned Sentry reporting with strict event allowlist and no automatic PII/request capture | Real SDK in-memory transport tests, default-off/runtime-isolation and failure-path regressions |
+| Security model/tooling is limited | Formalize local trust boundaries and residual risks; CodeQL scans Python, JavaScript and Actions | Security workflow results, private reporting, repository secret scanning/push protection and existing dependency audits |
+| Container resources/startup undocumented | Measure readiness time and idle Docker CPU/memory, verify JSON readiness/provenance through both paths | Revision-specific container evidence, real Docker/browser CI and failure-guard tests |
+| Legacy dashboard allegedly duplicates algorithms | Retain shared backend imports and document separate optional environment | Existing shared implementations; legacy packages remain outside the API lock/image |
+| Short, single-author history | Keep real features/fixes with their tests in focused commits; sustain useful work over time | Actual Git history and review findings; no manufactured contributors, dates or filler commits |
+
+Before release, review each changed area twice, resolve findings, run the full
+supported checks and repeat the frozen research study with the new dependency
+provenance. Preserve the prior reports and active model unchanged. Publish a
+tested release with measured evidence after all required jobs pass. Request the
+next public assessment only after DataFactor's once-per-day cooldown, using the
+already authorized report address; record the actual new score separately from
+engineering evidence. Use any new genuine deductions to choose further work.
+
+The detailed original plan below records the earlier baseline and completed
+architecture/research work; its descriptions of former gaps are historical.
+
+## Original plan — 17–18 October 2026
 
 Prepared 2026-10-17; implementation updated 2026-10-18. Architecture, research, browser integration and release evidence are implemented. Final release validation and the external assessment are tracked below. Target: an evaluator-confirmed score above 80; aim for 85 to allow some margin. The evaluator's weights and eligibility rules are unknown, so engineering checks cannot guarantee a numerical score or an offer.
 
