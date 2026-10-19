@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "git_sha": "313270f14ff3cc0447a2dfbd82b78dac9ddeaaed",
+  "tracked_changes": false,
+  "generated_at": "2026-10-19T12:17:10.385489+00:00",
+  "compose_ready_seconds": 16.998,
+  "health": {
+    "synthetic_data": true,
+    "data_provenance": "bundled_synthetic",
+    "status": "ok",
+    "model_ready": true,
+    "data_ready": true,
+    "observations": 43848,
+    "data_quality": {
+      "status": "attention_required",
+      "rows": 43844,
+      "date_coverage": {
+        "start": "2020-01-01 00:00:00",
+        "end": "2024-12-31 23:00:00"
+      },
+      "duplicates": 0,
+      "hourly_gaps": 4,
+      "first_gap": "2021-07-12 10:00:00",
+      "missing": {
+        "demand": 657,
+        "temperature": 657,
+        "humidity": 657
+      },
+      "non_finite": {
+        "demand": 0,
+        "temperature": 0,
+        "humidity": 0
+      },
+      "off_hour_timestamps": 0,
+      "outliers_iqr_3x": {
+        "Demand": 0,
+        "Temperature": 0,
+        "Humidity": 0
+      },
+      "model_data_compatible": false,
+      "required_history_hours": 336,
+      "rules": "No duplicate timestamps or gaps; demand/weather must be present for model-compatible rows. Outliers are flagged, not removed."
+    }
+  },
+  "dashboard_http_status": 200,
+  "direct_and_proxy_health_match": true,
+  "container_resource_sample": [
+    {
+      "BlockIO": "0B / 0B",
+      "CPUPerc": "0.17%",
+      "Container": "50dbccd5deba5e2e3f0051189d88372e8ea033094a5f231263de36fb120bfcb5",
+      "ID": "50dbccd5deba5e2e3f0051189d88372e8ea033094a5f231263de36fb120bfcb5",
+      "MemPerc": "1.02%",
+      "MemUsage": "163.3MiB / 15.61GiB",
+      "Name": "electricity-demand-forecasting-backend-1",
+      "NetIO": "2.69kB / 2.82kB",
+      "PIDs": "12"
+    },
+    {
+      "BlockIO": "0B / 4.1kB",
+      "CPUPerc": "0.00%",
+      "Container": "1669547150d6d74ac06ec7bc7cee11529bb6edafd48d95e72d6b5735595f5215",
+      "ID": "1669547150d6d74ac06ec7bc7cee11529bb6edafd48d95e72d6b5735595f5215",
+      "MemPerc": "0.03%",
+      "MemUsage": "5.422MiB / 15.61GiB",
+      "Name": "electricity-demand-forecasting-frontend-1",
+      "NetIO": "2.97kB / 3.28kB",
+      "PIDs": "6"
+    }
+  ],
+  "container_images": {
+    "50dbccd5deba5e2e3f0051189d88372e8ea033094a5f231263de36fb120bfcb5": "sha256:4bc9bd76274e01ccd2f2ceb7ae8b958550878d507e78a205f4921acc80f3bc55",
+    "1669547150d6d74ac06ec7bc7cee11529bb6edafd48d95e72d6b5735595f5215": "sha256:ff3be7ce17b165beacd6a56d33ac4809923b33eeac708f149f9ea00cb637a233"
+  },
+  "host": {
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "logical_cpus": 4
+  },
+  "measurement_scope": "Compose up through health-check readiness; image build/download excluded. Docker CPU/memory is one idle sample after startup, not peak load or a capacity guarantee. git_sha/tracked_changes describe the checkout; image IDs identify the tested images."
+}

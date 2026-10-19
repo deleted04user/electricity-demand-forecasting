@@ -35,6 +35,14 @@ its actual commit and runner. Startup excludes image builds; the idle sample
 does not measure peak memory or capacity under load. Use that artifact when
 comparing machines rather than treating the timeout as an expected startup time.
 
+One [measured CI run](https://github.com/deleted04user/electricity-demand-forecasting/actions/runs/39250696182)
+at revision `313270f` reached readiness in **16.998 seconds** on a four-logical-CPU
+Linux runner. Its idle sample was **163.3 MiB / 0.17% CPU** for the backend and
+**5.422 MiB / 0.00% CPU** for nginx/frontend. The [raw measurement](docs/benchmarks/container-ci-20261019.json)
+retains image IDs and timing scope. This is one observation with prebuilt images,
+not an expected result on every machine. Readiness still reports the bundled
+data's known gaps in `data_quality`; HTTP 200 does not certify complete data.
+
 ## Windows PowerShell
 
 Open a terminal at the cloned repository root. These commands use the virtual environment's interpreter directly, so PowerShell script-activation policies do not need changing:

@@ -2,6 +2,15 @@
 
 This log records substantive changes from the repository's development history.
 
+## v0.3.0 — 2026-10-19
+
+- Adopt a native `uv.lock` with five verified pip hash exports, preserving existing package versions; exercise locked installs on Linux/Windows and audit the optional reporting environment too.
+- Add default-off, application-owned Sentry error reporting with a private event schema, bounded shutdown, request-ID correlation, and real SDK transport regression tests.
+- Test rendered demand/correlation values, observed diagnostic metric/baseline/horizon rows, and HTTP/network/JSON failures in the React analytics pages.
+- Verify ready model/data and bundled provenance through the direct/proxied API; record actual container startup time, image identities and idle CPU/memory samples with failure guards.
+- Add CodeQL analysis for Python, JavaScript and Actions, a security policy and formal threat model; clarify local deployment and legacy UI boundaries.
+- Include native metadata/lock identities in frozen research provenance; retain earlier studies as historical evidence.
+
 ## v0.2.1 — 2026-10-18
 
 - Declare standard Python package metadata and dependency groups, including the required Pydantic 2 minimum, while retaining the tested locked package versions.
