@@ -44,7 +44,14 @@ def test_incomplete_or_unrelated_resource_samples_cannot_be_published(identifier
 
 
 @pytest.mark.parametrize(
-    "change", [{"CPUPerc": "--"}, {"CPUPerc": "NaN%"}, {"MemUsage": "-- / --"}]
+    "change",
+    [
+        {"CPUPerc": "--"},
+        {"CPUPerc": "NaN%"},
+        {"MemUsage": "-- / --"},
+        {"MemUsage": " / "},
+        {"MemUsage": "unknown / 2GiB"},
+    ],
 )
 def test_available_resources_are_recorded_and_unavailable_stats_are_rejected(change):
     samples = [

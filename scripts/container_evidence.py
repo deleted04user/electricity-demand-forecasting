@@ -7,6 +7,7 @@ import json
 import math
 import os
 import platform
+import re
 import subprocess
 import time
 from datetime import UTC, datetime
@@ -49,8 +50,15 @@ def resource_samples(output: str, containers: list[str]) -> list[dict[str, Any]]
     for sample in samples:
         try:
             cpu = float(sample["CPUPerc"].removesuffix("%"))
-            memory = sample["MemUsage"]
-            if not math.isfinite(cpu) or cpu < 0 or "--" in memory or "/" not in memory:
+            memory = sample["MemUsage"].split("/")
+            if (
+                not math.isfinite(cpu)
+                or cpu < 0
+                or len(memory) != 2
+                or not all(
+                    re.fullmatch(r"\s*\d+(?:\.\d+)?(?:[kKMGTPE]i?B|B)\s*", part) for part in memory
+                )
+            ):
                 raise ValueError
         except (AttributeError, TypeError, ValueError):
             raise ValueError("CPU/memory sample is unavailable") from None
