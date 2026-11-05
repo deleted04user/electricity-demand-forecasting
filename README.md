@@ -8,6 +8,8 @@ Hourly demand analysis and XGBoost forecasting, served by FastAPI with a React d
 
 ![Dashboard overview](figures/capture_vue_ensemble.png)
 
+**Explore:** [Docker demo](#run-with-docker) · [Source setup](#run-from-source) · [Verification](#verify-a-checkout) · [Architecture](#architecture-and-methodology) · [API](#api) · [Evaluation](#bundled-model-evaluation)
+
 ## Run with Docker
 
 Install Docker with Compose, start its engine, and run from the repository root:
@@ -196,3 +198,7 @@ Use a new output directory for each run. The checked-in protocol caps fits, thre
 | `dashboard.py` | Optional legacy Streamlit dashboard |
 
 See [CHANGELOG.md](CHANGELOG.md) for documented changes. Original project software uses the [MIT License](LICENSE); third-party report and data assets retain their respective rights.
+
+---
+
+[Oussama Oulkaid · GitHub profile](https://github.com/deleted04user) · [Explore the project portfolio](https://github.com/deleted04user/deleted04user/blob/main/PORTFOLIO.md)
