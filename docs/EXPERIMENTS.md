@@ -15,6 +15,8 @@ The audit confirms numeric results match the prior version-four study exactly.
 All earlier reports remain immutable historical
 evidence; their older dependency/provenance bytes are not rewritten.
 
+The [November 6 dependency refresh](../experiments/reports/bounded_synthetic_20261106_security/REPORT.md) and [repeat](../experiments/reports/bounded_synthetic_20261106_security_repeat/REPORT.md) update the evidence for the patched lockfiles. Each run completed 28 fits and 33 local MLflow comparisons, in 48.765 and 46.766 seconds. The [independent audit](../experiments/reports/bounded_synthetic_20261106_security/reproduction_check.json) found zero difference across the compared metrics between both runs and the October 19 reference. The serving artifact and earlier reports remain unchanged.
+
 ## Install a locked environment
 
 From the repository root, with Python 3.12 and `uv` installed:
@@ -43,7 +45,7 @@ The checked-in auditor uses only Python's standard library, independently of
 pandas/MLflow aggregation:
 
 ```bash
-python scripts/audit_reproduction.py experiments/reports/bounded_synthetic_20261019_v5 experiments/reports/bounded_synthetic_20261019_v5_repeat --historical experiments/reports/bounded_synthetic_20261019_v4
+python scripts/audit_reproduction.py experiments/reports/bounded_synthetic_20261106_security experiments/reports/bounded_synthetic_20261106_security_repeat --historical experiments/reports/bounded_synthetic_20261019_v5
 ```
 
 It checks current input hashes, common fold timestamps, segment totals and

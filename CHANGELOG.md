@@ -2,6 +2,12 @@
 
 This log records substantive changes from the repository's development history.
 
+## Unreleased
+
+- Refresh `certifi`, `pyasn1`, Pillow and Tornado to patched versions; update the optional Streamlit environment for Pillow 13 compatibility. Regenerate all five pip exports from `uv.lock`.
+- Update Vite and Vitest to fix advisories affecting the development and test toolchain.
+- Reproduce the frozen synthetic study against the new lockfiles and verify it against the October 19 run in CI. Preserve historical reports and the serving model.
+
 ## v0.3.1 — 2026-10-19
 
 - Limit HTTP request bodies to 64 KiB by default using Starlette's built-in limiter, including chunked bodies and misleading lengths; retain request IDs/CORS on expected 413 responses. Add bounded startup configuration and declare the required Starlette minimum explicitly.

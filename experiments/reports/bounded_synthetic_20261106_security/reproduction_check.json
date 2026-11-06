@@ -1,0 +1,86 @@
+{
+  "status": "passed",
+  "method": "independent stdlib JSON/csv/math/sqlite3 checks; no pandas or MLflow imports",
+  "runs": [
+    {
+      "path": "experiments/reports/bounded_synthetic_20261106_security",
+      "run_id": "20261106T113052Z_92c9fc61",
+      "report_sha256": "d737b70fe42aaefb6f66e8e6f76f9ae04f574e1e9289fdfef6e7ca7b24286c97",
+      "portable_files_sha256": {
+        "report.json": "d737b70fe42aaefb6f66e8e6f76f9ae04f574e1e9289fdfef6e7ca7b24286c97",
+        "runs.csv": "df41dbcacfe72bd8c9eb87175606fe003db122b52d6d248a5819d66ee372bbab",
+        "segmented_errors.csv": "d6956be9ce8b96be84146e1b19551eff13e43d4a223180df113fa91eabf2da5e",
+        "interval_predictions.csv": "b1e7f062c70e573a1a8a7fd397e4848235e2586e789ea12bfb2366352fc4f940",
+        "REPORT.md": "577e2cedad842965b22e7b6f900edf4c800b7ccfe261480cf75b2ee760f8fba0"
+      }
+    },
+    {
+      "path": "experiments/reports/bounded_synthetic_20261106_security_repeat",
+      "run_id": "20261106T113147Z_32881bbe",
+      "report_sha256": "14eeb3c7b1cef9d133b310cdd4443f7532bece29a567a4a1ce1d6bc86cfdc5b0",
+      "portable_files_sha256": {
+        "report.json": "14eeb3c7b1cef9d133b310cdd4443f7532bece29a567a4a1ce1d6bc86cfdc5b0",
+        "runs.csv": "3d72e860543f46329952850236071b56a915b1abc1d8c30509228265925ce5ba",
+        "segmented_errors.csv": "d6956be9ce8b96be84146e1b19551eff13e43d4a223180df113fa91eabf2da5e",
+        "interval_predictions.csv": "b1e7f062c70e573a1a8a7fd397e4848235e2586e789ea12bfb2366352fc4f940",
+        "REPORT.md": "417ae62411d2c7435e6575c067a980550302e8d16c3af2e1174f7bbc9f679798"
+      }
+    }
+  ],
+  "source_manifest_sha256": "1254f7cbe622a66175037f55fdbf18d849090247ce5f73fd42ff26589bd28a5f",
+  "tolerance_absolute": 0.0001,
+  "maximum_metric_difference": 0,
+  "independent_interval_counts": [
+    {
+      "horizon_hours": 1,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 6,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 24,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 72,
+      "covered": 11,
+      "scored_origins": 11,
+      "planned_origins": 12,
+      "coverage": 1.0
+    },
+    {
+      "horizon_hours": 168,
+      "covered": 12,
+      "scored_origins": 12,
+      "planned_origins": 12,
+      "coverage": 1.0
+    }
+  ],
+  "common_fold_timestamp_checks": "passed",
+  "segment_partition_counts": "passed",
+  "csv_metric_checks": "passed",
+  "sqlite_metrics_checks": "passed",
+  "native_lock_and_current_input_hashes": "passed",
+  "active_artifact_unchanged": true,
+  "mlflow_local_database_finished_runs": [
+    33,
+    33
+  ],
+  "historical_run_comparison": {
+    "path": "experiments/reports/bounded_synthetic_20261019_v5",
+    "report_sha256": "6d7a287fb9140fb21a7e986849dca0e6e66afd7d2e9b878a0ac223760a6b42d8",
+    "maximum_metric_difference": 0,
+    "scientific_prediction_source_hashes_unchanged": true
+  }
+}

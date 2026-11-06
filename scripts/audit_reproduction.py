@@ -513,7 +513,6 @@ def main() -> None:
             "report_sha256": sha256(args.historical / "report.json"),
             "maximum_metric_difference": comparison(first, prior, tolerance),
             "scientific_prediction_source_hashes_unchanged": unchanged,
-            "note": "Native lock adoption, optional error-reporting dependency and expanded provenance; predictive code/config and resolved scientific package versions retained",
         }
     content = json.dumps(proof, indent=2, allow_nan=False) + "\n"
     if args.output:
