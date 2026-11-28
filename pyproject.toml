@@ -32,7 +32,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "sentry-sdk>=2.72,<3",
+    "sentry-sdk>=2.72,<4",
     "pytest>=8,<10",
     "pytest-cov>=6,<8",
     "ruff>=0.14,<1",
@@ -45,7 +45,7 @@ dev = [
 ]
 # Research includes the development tools, matching requirements-research.txt.
 research = [
-    "sentry-sdk>=2.72,<3",
+    "sentry-sdk>=2.72,<4",
     "pytest>=8,<10",
     "pytest-cov>=6,<8",
     "ruff>=0.14,<1",
@@ -67,7 +67,7 @@ legacy = [
     "plotly>=5.17.0",
     "scipy>=1.11.0",
 ]
-observability = ["sentry-sdk>=2.72,<3"]
+observability = ["sentry-sdk>=2.72,<4"]
 
 [project.urls]
 Repository = "https://github.com/deleted04user/electricity-demand-forecasting"
